@@ -8,6 +8,7 @@
 
   home.packages = with pkgs; [
     swww
+    mpvpaper # Required for video wallpapers
     hyprlock
     hypridle
     grim

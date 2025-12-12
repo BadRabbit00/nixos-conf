@@ -25,7 +25,7 @@
 
   # Install the theme
   environment.systemPackages = with pkgs; [
-    where-is-my-sddm-theme
+    # where-is-my-sddm-theme # Broken on Qt6 currently
     # Add other Hyprland essentials here if they are system-wide
     bibata-cursors
     # Fix for SDDM theme error "Qt5Compat.GraphicalEffects is not installed"
