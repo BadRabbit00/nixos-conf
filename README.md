@@ -1,147 +1,99 @@
-# NixOS Configuration Template
+# 🎸 NixOS Configuration: "Bocchi the Rock" Edition
 
-Простой и удобный шаблон конфигурации NixOS для быстрого старта. Не нужно думать об архитектуре - просто начни работать!
+> "If I can't be a rock star, I'll just be a Linux rice star!" - Hitori Gotoh (probably)
 
-## 🚀 Быстрый старт
+This repository contains a highly customized **NixOS** configuration, themed after the anime **Bocchi the Rock!**. It is designed to be built and tested inside a **QEMU VM** running on **WSL2** (Windows Subsystem for Linux), but can be deployed to real hardware.
 
-### 1. Установка NixOS
+## 🌟 Features
 
-Если система уже установлена, пропустите этот шаг.
+### 🎨 Visual Style (The Rice)
+*   **Theme**: **Catppuccin Mocha** (Dark base) with **Pink (#f5c2e7)** accents, matching Hitori's hair and tracksuit.
+*   **Wallpaper**: Animated video wallpapers powered by `swww`.
+*   **Bar**: Custom **Eww** (ElKowars wacky widgets) bar with a pink border.
+*   **Visualizer**: **Cava** audio visualizer that reacts to music with sunset colors.
+*   **Cursor**: `Bibata-Modern-Ice` (Clean white cursor).
+*   **Fonts**: `SpaceMono Nerd Font` for a consistent coding aesthetic.
 
-### 2. Клонирование конфига
+### 🛠️ Core System
+*   **OS**: NixOS Unstable (via Flakes).
+*   **Window Manager**: **Hyprland** (Wayland compositor).
+*   **Terminal**: **Kitty** (Transparent, themed).
+*   **Shell**: **Zsh** + **Starship** prompt.
+*   **Launcher**: **Fuzzel** (Fast, Wayland-native).
+*   **Notifications**: **SwayNC**.
+*   **Login Manager**: **SDDM**.
 
-```bash
-git clone https://github.com/BadRabbit00/nixos-conf.git ~/nixos-conf
-cd ~/nixos-conf
-```
-
-### 3. Настройка под себя
-
-#### Обязательные изменения:
-
-1. **Замените hardware-configuration.nix на свой:**
-   ```bash
-   sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix
-   ```
-   **Важно:** Это автоматически определит ваше железо и создаст правильную конфигурацию. Для AMD процессоров также будет автоматически использован `kvm-amd` вместо `kvm-intel`.
-
-2. **Измените hostname в configuration.nix:**
-   ```nix
-   networking.hostName = "your-hostname"; # Строка 13
-   ```
-
-3. **Измените имя пользователя:**
-   - В `configuration.nix` (строка 31): `users.users.your-username`
-   - В `home.nix` (строки 4-5): `home.username` и `home.homeDirectory`
-   - В `flake.nix` (строка 22): `home-manager.users.your-username`
-
-4. **Измените имя конфигурации в flake.nix (опционально):**
-   ```nix
-   nixosConfigurations.your-hostname = ... # Строка 14
-   ```
-
-#### Дополнительные настройки:
-
-- **Git:** Измените имя и email в `home.nix` (строки 22-23)
-- **Timezone:** По умолчанию Europe/Moscow в `configuration.nix` (строка 17)
-
-### 4. Применение конфигурации
-
-```bash
-# Первое применение
-sudo nixos-rebuild switch --flake .#default
-
-# Если вы изменили имя конфигурации:
-sudo nixos-rebuild switch --flake .#your-hostname
-```
-
-## 📁 Структура файлов
+## 📂 Project Structure
 
 ```
-nixos-conf/
-├── flake.nix                 # Точка входа (современный способ)
-├── configuration.nix         # Основная конфигурация системы
-├── hardware-configuration.nix # Конфигурация железа
-└── home.nix                  # Конфигурация пользователя (Home Manager)
+.
+├── flake.nix             # Entry point for the configuration
+├── badrabbitpc.qcow2     # VM Disk Image (generated)
+├── home/                 # Home Manager configuration (User: BadRabbit)
+│   ├── default.nix       # Home Manager entry point
+│   ├── desktop/          # Desktop Environment config
+│   │   ├── hyprland/     # Hyprland & Hyprlock config
+│   │   ├── eww/          # Bar & Widgets
+│   │   ├── fuzzel/       # App Launcher
+│   │   └── swaync/       # Notifications
+│   ├── programs/         # User programs (VS Code, Firefox, etc.)
+│   ├── shell/            # Zsh & Git config
+│   ├── terminal/         # Kitty config
+│   ├── theme/            # GTK & Cursor themes
+│   └── wallpapers/       # Wallpapers storage
+├── hosts/                # Host-specific configurations
+│   └── desktop/          # Main desktop host config
+├── modules/              # Reusable NixOS modules
+│   ├── core/             # System core (Boot, Net, User, Audio)
+│   └── hyprland/         # System-level Hyprland setup
+└── result/               # Build output symlink
 ```
 
-## 📦 Добавление пакетов
+## 🚀 How to Run (WSL2 + QEMU)
 
-### Системные пакеты (для всех пользователей)
+This setup allows you to develop and test the configuration on Windows without rebooting.
 
-Редактируйте `configuration.nix`:
-```nix
-environment.systemPackages = with pkgs; [
-  vim
-  wget
-  curl
-  git
-  firefox  # Добавьте сюда
-  vscode   # И сюда
-];
-```
+### Prerequisites
+1.  **WSL2** installed with NixOS or Ubuntu (with Nix package manager).
+2.  **QEMU** installed in your WSL distro.
+3.  **XServer/Wayland Server** on Windows (e.g., VcXsrv or GWSL) if not using WSLg.
 
-### Пользовательские пакеты
+### Build & Launch
 
-Редактируйте `home.nix`:
-```nix
-home.packages = with pkgs; [
-  htop
-  telegram-desktop
-  # Ваши пакеты здесь
-];
-```
+1.  **Add changes to Git** (Flakes require files to be tracked):
+    ```bash
+    git add .
+    ```
 
-## 🔄 Обновление системы
+2.  **Build the Virtual Machine**:
+    ```bash
+    nix build .#nixosConfigurations.badrabbitpc.config.system.build.vm --extra-experimental-features "nix-command flakes"
+    ```
 
-```bash
-# Обновить flake.lock
-nix flake update
+3.  **Run the VM**:
+    ```bash
+    ./result/bin/run-badrabbitpc-vm
+    ```
 
-# Применить изменения
-sudo nixos-rebuild switch --flake .#default
+### ⌨️ Keybindings (Modified for VM)
 
-# Или используйте алиас (после первого применения)
-update
-```
+Since the Windows key (`Super`) is often captured by the host OS, the main modifier has been changed to **ALT**.
 
-## 💡 Полезные команды
+| Key Combination | Action |
+| :--- | :--- |
+| `ALT + Q` | Open Terminal (Kitty) |
+| `ALT + R` | Open App Launcher (Fuzzel) |
+| `ALT + C` | Close Active Window |
+| `ALT + E` | Open File Manager (Thunar) |
+| `ALT + V` | Toggle Floating Window |
+| `ALT + M` | Exit Hyprland (Logout) |
+| `ALT + Arrow Keys` | Move Focus |
+| `ALT + 1-9` | Switch Workspace |
 
-```bash
-# Проверить конфигурацию без применения
-sudo nixos-rebuild dry-build --flake .#default
+## ⚠️ Important Notes
 
-# Откатиться на предыдущую конфигурацию
-sudo nixos-rebuild switch --rollback
-
-# Посмотреть историю поколений
-sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
-
-# Почистить старые поколения
-sudo nix-collect-garbage -d
-```
-
-## 🎯 Особенности
-
-- ✅ Современная структура с flakes
-- ✅ Home Manager для пользовательских настроек
-- ✅ Минимальная базовая конфигурация
-- ✅ Готово к использованию из коробки
-- ✅ Легко расширяется
-
-## 📚 Что дальше?
-
-1. Добавьте нужные пакеты в `home.nix` или `configuration.nix`
-2. Настройте программы в `home.nix` (git, bash, и т.д.)
-3. Добавьте сервисы в `configuration.nix` (docker, postgresql, и т.д.)
-4. Разделите конфиг на модули при необходимости
-
-## 🆘 Проблемы?
-
-- Если не работает: проверьте `hardware-configuration.nix`
-- Если конфликт имён: измените hostname и username
-- Если ошибки flake: запустите `nix flake update`
+*   **Wallpapers**: Place your `wallpaper.mp4` in `home/wallpapers/` before building. A placeholder is used by default.
+*   **Performance**: Running a Wayland compositor (Hyprland) inside a VM inside WSL might have graphical artifacts depending on your GPU passthrough setup.
 
 ---
-
-**Совет:** Коммитьте изменения в git после каждой успешной конфигурации!
+*Generated by GitHub Copilot for BadRabbit*
