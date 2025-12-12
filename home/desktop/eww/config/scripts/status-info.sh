@@ -16,7 +16,7 @@ fi
 
 case "${1:-}" in
   wifi-label)
-    info="$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi 2>/dev/null | awk -F: '$1==\"yes\"{print $2\";\"$3; exit}' || true)"
+    info="$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2";"$3; exit}' || true)"
     if [ -z "${info:-}" ]; then
       echo "Offline"
       exit 0
@@ -28,7 +28,7 @@ case "${1:-}" in
     echo "${ssid} • ${signal}%"
     ;;
   wifi-icon)
-    signal="$(nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | awk -F: '$1==\"yes\"{print $2; exit}' || true)"
+    signal="$(nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}' || true)"
     [ -z "${signal:-}" ] && signal=0
     if [ "${signal%.*}" -ge 80 ]; then
       icon="󰤨"
