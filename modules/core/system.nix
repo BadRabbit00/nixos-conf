@@ -16,7 +16,21 @@
     LC_TIME = "ru_RU.UTF-8";
   };
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    auto-optimise-store = true; # Deduplicate identical files
+    builders-use-substitutes = true;
+    # Parallel connections for faster downloads
+    max-jobs = "auto";
+    cores = 0;
+  };
+
+  # Garbage collection to save disk space
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
   
   # Allow unfree packages (needed for Chrome, VS Code, etc.)
   nixpkgs.config.allowUnfree = true;
