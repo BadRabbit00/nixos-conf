@@ -20,7 +20,7 @@
     enable = true;
     wayland.enable = true;
     # We will use a nice theme. 'where-is-my-sddm-theme' is a popular clean choice in nixpkgs.
-    theme = "where_is_my_sddm_theme";
+    # theme = "where_is_my_sddm_theme";
   };
 
   # Install the theme

@@ -16,4 +16,7 @@
   ];
 
   xdg.configFile."hypr/hyprlock.conf".source = ./hyprlock.conf;
+  
+  # Copy local wallpaper to VM
+  xdg.configFile."hypr/wallpaper.mp4".source = ../../wallpapers/wallpaper.mp4;
 }
