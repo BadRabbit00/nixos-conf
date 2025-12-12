@@ -6,6 +6,7 @@
 // Hitori (Bocchi) Theme Colors
 $pink: #f5c2e7;
 $bg: #1e1e2e;
+$bg-semi: rgba(30, 30, 46, 0.85);
 $bg-alt: #313244;
 $text: #cdd6f4;
 
@@ -14,58 +15,194 @@ $sunset-1: #fab387; // Peach
 $sunset-2: #f38ba8; // Red
 $sunset-3: #f9e2af; // Yellow
 
-.bar {
-  background-color: $bg;
-  border-radius: 10px;
-  border: 1px solid $pink; // Bocchi accent
+// Panel container
+.panel-container {
+  background: transparent;
+  padding: 0;
 }
 
-.workspaces button {
-  padding: 5px 10px;
-  background-color: $bg-alt;
+// Widget base style with clipped corners
+.widget {
+  background-color: $bg-semi;
+  border: 2px solid $pink;
+  padding: 12px;
+  min-width: 60px;
+  min-height: 60px;
   color: $text;
-  border-radius: 5px;
+  
+  // Clipped corners effect (top-left and bottom-right)
+  clip-path: polygon(
+    15px 0%, 
+    100% 0%, 
+    100% calc(100% - 15px), 
+    calc(100% - 15px) 100%, 
+    0% 100%, 
+    0% 15px
+  );
+  
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-.workspaces button:hover {
-  background-color: $pink;
-  color: $bg;
+.widget:hover {
+  background-color: rgba(49, 50, 68, 0.9);
+  border-color: $pink;
+  box-shadow: 0 0 15px rgba(245, 194, 231, 0.5);
 }
 
-.time {
-  font-size: 16px;
+// Time widget (largest)
+.time-widget {
+  min-width: 80px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-text {
+  font-size: 18px;
   font-weight: bold;
-  color: $pink; // Bocchi accent
-}
-
-.metric {
-  margin-left: 20px;
-}
-
-.metric .label {
-  font-size: 20px;
   color: $pink;
+  text-align: center;
 }
 
-.metric scale trough {
-  all: unset;
-  background-color: $bg-alt;
-  border-radius: 10px;
-  min-height: 10px;
-  min-width: 100px;
+// Icon widgets
+.wifi-widget,
+.volume-widget,
+.keyboard-widget {
+  min-width: 60px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: min-width 0.2s ease-out;
+}
+
+.wifi-widget:hover,
+.volume-widget:hover,
+.keyboard-widget:hover {
+  min-width: 150px;
+}
+
+.icon {
+  font-size: 24px;
+  color: $pink;
+  min-width: 30px;
+  text-align: center;
+}
+
+.info {
+  font-size: 14px;
+  color: $text;
   margin-left: 10px;
+  white-space: nowrap;
 }
 
-.metric scale trough highlight {
-  all: unset;
-  background-color: $pink;
-  border-radius: 10px;
+// Power widget
+.power-widget-container {
+  position: relative;
+}
+
+.power-widget {
+  min-width: 60px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: $pink;
+  background-color: $bg-semi;
+  border: 2px solid $pink;
+  
+  clip-path: polygon(
+    15px 0%, 
+    100% 0%, 
+    100% calc(100% - 15px), 
+    calc(100% - 15px) 100%, 
+    0% 100%, 
+    0% 15px
+  );
+  
+  transition: all 0.3s ease;
+}
+
+.power-widget:hover {
+  background-color: rgba(243, 139, 168, 0.3);
+  box-shadow: 0 0 15px rgba(245, 194, 231, 0.6);
+}
+
+.power-submenu {
+  display: flex;
+  gap: 5px;
+  margin-right: 5px;
+}
+
+.power-sub-btn {
+  min-width: 50px;
+  min-height: 50px;
+  background-color: $bg-semi;
+  border: 2px solid $pink;
+  color: $pink;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  clip-path: polygon(
+    12px 0%, 
+    100% 0%, 
+    100% calc(100% - 12px), 
+    calc(100% - 12px) 100%, 
+    0% 100%, 
+    0% 12px
+  );
+  
+  transition: all 0.2s ease;
+}
+
+.power-sub-btn:hover {
+  background-color: rgba(245, 194, 231, 0.3);
+  box-shadow: 0 0 10px rgba(245, 194, 231, 0.5);
+  transform: scale(1.05);
 }
 
 // Visualizer Styles
+.music-viz {
+  background: transparent;
+}
+
 .music-viz .bar {
   width: 30px;
   border-radius: 15px 15px 0 0;
   background-image: linear-gradient(to top, $sunset-2, $sunset-1, $sunset-3);
   opacity: 0.8;
+  border: 1px solid rgba(245, 194, 231, 0.3);
+  transition: all 0.1s ease;
+}
+
+// Revealer animations
+revealer {
+  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+// Smooth sliding animations
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

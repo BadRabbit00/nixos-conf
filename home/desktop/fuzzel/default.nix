@@ -16,7 +16,7 @@
         match = "f38ba8ff";
         selection = "585b70ff";
         selection-text = "cdd6f4ff";
-        border = "b4befeff";
+        border = "f5c2e7ff";  # Bocchi Pink
       };
       border = {
         width = 2;
