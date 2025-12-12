@@ -1,0 +1,71 @@
+* {
+  all: unset;
+  font-family: "SpaceMono Nerd Font";
+}
+
+// Hitori (Bocchi) Theme Colors
+$pink: #f5c2e7;
+$bg: #1e1e2e;
+$bg-alt: #313244;
+$text: #cdd6f4;
+
+// Sunset Colors for Visualizer
+$sunset-1: #fab387; // Peach
+$sunset-2: #f38ba8; // Red
+$sunset-3: #f9e2af; // Yellow
+
+.bar {
+  background-color: $bg;
+  border-radius: 10px;
+  border: 1px solid $pink; // Bocchi accent
+}
+
+.workspaces button {
+  padding: 5px 10px;
+  background-color: $bg-alt;
+  color: $text;
+  border-radius: 5px;
+}
+
+.workspaces button:hover {
+  background-color: $pink;
+  color: $bg;
+}
+
+.time {
+  font-size: 16px;
+  font-weight: bold;
+  color: $pink; // Bocchi accent
+}
+
+.metric {
+  margin-left: 20px;
+}
+
+.metric .label {
+  font-size: 20px;
+  color: $pink;
+}
+
+.metric scale trough {
+  all: unset;
+  background-color: $bg-alt;
+  border-radius: 10px;
+  min-height: 10px;
+  min-width: 100px;
+  margin-left: 10px;
+}
+
+.metric scale trough highlight {
+  all: unset;
+  background-color: $pink;
+  border-radius: 10px;
+}
+
+// Visualizer Styles
+.music-viz .bar {
+  width: 30px;
+  border-radius: 15px 15px 0 0;
+  background-image: linear-gradient(to top, $sunset-2, $sunset-1, $sunset-3);
+  opacity: 0.8;
+}

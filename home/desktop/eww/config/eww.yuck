@@ -1,0 +1,89 @@
+(defwindow bar
+  :monitor 0
+  :geometry (geometry :x "0%"
+                      :y "10px"
+                      :width "98%"
+                      :height "40px"
+                      :anchor "top center")
+  :stacking "fg"
+  :reserve (struts :distance "50px" :side "top")
+  :windowtype "dock"
+  :wm-ignore false
+  (centerbox :orientation "h"
+    (workspaces)
+    (time)
+    (sidestuff)))
+
+(defwindow visualizer
+  :monitor 0
+  :geometry (geometry :x "0%"
+                      :y "0%"
+                      :width "100%"
+                      :height "200px"
+                      :anchor "bottom center")
+  :stacking "bg"
+  :windowtype "desktop"
+  :wm-ignore true
+  (music-viz))
+
+(defwidget music-viz []
+  (box :class "music-viz"
+       :orientation "h"
+       :space-evenly true
+       :halign "center"
+       :valign "end"
+       :spacing 25
+    (for h in music-values
+      (box :class "bar"
+           :style "height: ${h}px;"))))
+
+(defpoll music-values :interval "0.01s"
+  "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
+
+(defwidget workspaces []
+  (box :class "workspaces"
+       :orientation "h"
+       :space-evenly true
+       :halign "start"
+       :spacing 10
+    (button :onclick "hyprctl dispatch workspace 1" 1)
+    (button :onclick "hyprctl dispatch workspace 2" 2)
+    (button :onclick "hyprctl dispatch workspace 3" 3)
+    (button :onclick "hyprctl dispatch workspace 4" 4)
+    (button :onclick "hyprctl dispatch workspace 5" 5)))
+
+(defwidget time []
+  (box :class "time"
+       :orientation "h"
+       :space-evenly false
+       :halign "center"
+    time-var))
+
+(defwidget sidestuff []
+  (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
+    (metric :label "🔊"
+            :value volume
+            :onchange "amixer -D pulse sset Master {}%")
+    (metric :label "💾"
+            :value {EWW_RAM.used_mem_perc}
+            :onchange "")
+    (metric :label "🔋"
+            :value {EWW_BATTERY.BAT0.capacity}
+            :onchange "")))
+
+(defwidget metric [label value onchange]
+  (box :orientation "h"
+       :class "metric"
+       :space-evenly false
+    (box :class "label" label)
+    (scale :min 0
+           :max 101
+           :active {onchange != ""}
+           :value value
+           :onchange onchange)))
+
+(defpoll time-var :interval "1s"
+  "date '+%H:%M %b %d, %Y'")
+
+(defpoll volume :interval "1s"
+  "scripts/getvol")
