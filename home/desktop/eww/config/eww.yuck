@@ -1,18 +1,29 @@
-(defwindow bar
+;; Main panel window positioned at top-right
+(defwindow panel
   :monitor 0
-  :geometry (geometry :x "0%"
+  :geometry (geometry :x "10px"
                       :y "10px"
-                      :width "98%"
-                      :height "40px"
-                      :anchor "top center")
+                      :width "80px"
+                      :height "400px"
+                      :anchor "top right")
   :stacking "fg"
-  :reserve (struts :distance "50px" :side "top")
   :windowtype "dock"
   :wm-ignore false
-  (centerbox :orientation "h"
-    (workspaces)
-    (time)
-    (sidestuff)))
+  (eventbox :onhover "eww update panel_hover=true"
+            :onhoverlost "eww update panel_hover=false"
+    (box :class "panel-container"
+         :orientation "v"
+         :space-evenly false
+         :spacing 10
+      (time-widget)
+      (revealer :reveal panel_hover
+                :transition "slidedown"
+                :duration "300ms"
+        (box :orientation "v" :spacing 10
+          (wifi-widget)
+          (volume-widget)
+          (keyboard-widget)
+          (power-widget))))))
 
 (defwindow visualizer
   :monitor 0
@@ -40,50 +51,87 @@
 (defpoll music-values :interval "0.05s"
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
-(defwidget workspaces []
-  (box :class "workspaces"
-       :orientation "h"
-       :space-evenly true
-       :halign "start"
-       :spacing 10
-    (button :onclick "hyprctl dispatch workspace 1" 1)
-    (button :onclick "hyprctl dispatch workspace 2" 2)
-    (button :onclick "hyprctl dispatch workspace 3" 3)
-    (button :onclick "hyprctl dispatch workspace 4" 4)
-    (button :onclick "hyprctl dispatch workspace 5" 5)))
+;; Variables
+(defvar panel_hover false)
+(defvar wifi_hover false)
+(defvar volume_hover false)
+(defvar keyboard_hover false)
+(defvar power_hover false)
 
-(defwidget time []
-  (box :class "time"
-       :orientation "h"
+;; Time widget (largest block)
+(defwidget time-widget []
+  (box :class "widget time-widget"
+       :orientation "v"
        :space-evenly false
-       :halign "center"
-    time-var))
+    (label :class "time-text" :text time-var)))
 
-(defwidget sidestuff []
-  (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
-    (metric :label "🔊"
-            :value volume
-            :onchange "pamixer --set-volume {}")
-    (metric :label "💾"
-            :value {EWW_RAM.used_mem_perc}
-            :onchange "")
-    (metric :label "🔋"
-            :value {EWW_BATTERY.BAT0.capacity}
-            :onchange "")))
+;; WiFi widget with expansion
+(defwidget wifi-widget []
+  (eventbox :onhover "eww update wifi_hover=true"
+            :onhoverlost "eww update wifi_hover=false"
+    (box :class "widget wifi-widget"
+         :orientation "h"
+         :space-evenly false
+      (label :class "icon" :text "")
+      (revealer :reveal wifi_hover
+                :transition "slideleft"
+                :duration "200ms"
+        (label :class "info" :text wifi-name)))))
 
-(defwidget metric [label value onchange]
-  (box :orientation "h"
-       :class "metric"
-       :space-evenly false
-    (box :class "label" label)
-    (scale :min 0
-           :max 101
-           :active {onchange != ""}
-           :value value
-           :onchange onchange)))
+;; Volume widget with expansion
+(defwidget volume-widget []
+  (eventbox :onhover "eww update volume_hover=true"
+            :onhoverlost "eww update volume_hover=false"
+    (box :class "widget volume-widget"
+         :orientation "h"
+         :space-evenly false
+      (label :class "icon" :text "")
+      (revealer :reveal volume_hover
+                :transition "slideleft"
+                :duration "200ms"
+        (label :class "info" :text "${volume}%")))))
 
+;; Keyboard layout widget with expansion
+(defwidget keyboard-widget []
+  (eventbox :onhover "eww update keyboard_hover=true"
+            :onhoverlost "eww update keyboard_hover=false"
+    (box :class "widget keyboard-widget"
+         :orientation "h"
+         :space-evenly false
+      (label :class "icon" :text keyboard-short)
+      (revealer :reveal keyboard_hover
+                :transition "slideleft"
+                :duration "200ms"
+        (label :class "info" :text keyboard-full)))))
+
+;; Power widget with submenu
+(defwidget power-widget []
+  (eventbox :onhover "eww update power_hover=true"
+            :onhoverlost "eww update power_hover=false; eww update power_expanded=false"
+    (box :class "widget power-widget-container"
+         :orientation "h"
+         :space-evenly false
+      (revealer :reveal power_hover
+                :transition "slideleft"
+                :duration "200ms"
+        (box :orientation "h" :spacing 5 :class "power-submenu"
+          (button :class "power-sub-btn" :onclick "hyprlock" "")
+          (button :class "power-sub-btn" :onclick "systemctl suspend" "")
+          (button :class "power-sub-btn" :onclick "systemctl reboot" "")))
+      (button :class "widget power-widget" :onclick "systemctl poweroff" ""))))
+
+;; Polls
 (defpoll time-var :interval "1s"
-  "date '+%H:%M %b %d, %Y'")
+  "date '+%H:%M'")
 
 (defpoll volume :interval "1s"
-  "pamixer --get-volume")
+  "pamixer --get-volume || echo 0")
+
+(defpoll wifi-name :interval "5s"
+  "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2 || echo 'No WiFi'")
+
+(defpoll keyboard-short :interval "1s"
+  "hyprctl devices -j | jq -r '.keyboards[0].active_keymap' | cut -c1-2 | tr '[:lower:]' '[:upper:]' || echo 'EN'")
+
+(defpoll keyboard-full :interval "1s"
+  "hyprctl devices -j | jq -r '.keyboards[0].active_keymap' | sed 's/English (US)/English/;s/Russian/Russian/' || echo 'English'")

@@ -8,9 +8,15 @@ This repository contains a highly customized **NixOS** configuration, themed aft
 
 ### 🎨 Visual Style (The Rice)
 *   **Theme**: **Catppuccin Mocha** (Dark base) with **Pink (#f5c2e7)** accents, matching Hitori's hair and tracksuit.
-*   **Wallpaper**: Animated video wallpapers powered by `swww`.
-*   **Bar**: Custom **Eww** (ElKowars wacky widgets) bar with a pink border.
-*   **Visualizer**: **Cava** audio visualizer that reacts to music with sunset colors.
+*   **Wallpaper**: Animated video wallpapers powered by `mpvpaper` (swww).
+*   **Panel**: Custom **Eww** (ElKowars wacky widgets) vertical panel on top-right with cascading animations.
+    *   Time display (largest block)
+    *   WiFi indicator (expandable on hover)
+    *   Volume control (expandable on hover)
+    *   Keyboard layout (expandable on hover)
+    *   Power menu with Lock/Sleep/Reboot/Shutdown options
+    *   All widgets have clipped corners (top-left and bottom-right) with pink borders
+*   **Visualizer**: **Cava** audio visualizer at the bottom with sunset gradient colors.
 *   **Cursor**: `Bibata-Modern-Ice` (Clean white cursor).
 *   **Fonts**: `SpaceMono Nerd Font` for a consistent coding aesthetic.
 
