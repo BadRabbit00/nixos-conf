@@ -9,7 +9,7 @@
   imports = [
     ./desktop/default.nix
     ./shell/default.nix
-    ./terminal/hyper.nix
+    ./terminal/kitty.nix
     ./programs/default.nix
     ./theme/default.nix
   ];

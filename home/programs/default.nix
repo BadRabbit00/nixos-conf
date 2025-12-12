@@ -21,12 +21,9 @@
   ];
 
   # Configure Nano
-  programs.nano = {
-    enable = true;
-    nanorc = ''
-      set linenumbers
-      set tabsize 2
-      set tabstospaces
-    '';
-  };
+  home.file.".nanorc".text = ''
+    set linenumbers
+    set tabsize 2
+    set tabstospaces
+  '';
 }

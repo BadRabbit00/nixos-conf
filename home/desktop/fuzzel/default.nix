@@ -5,7 +5,7 @@
     enable = true;
     settings = {
       main = {
-        terminal = "hyper"; 
+        terminal = "${pkgs.kitty}/bin/kitty"; 
         layer = "overlay";
         width = 40;
         font = "SpaceMono Nerd Font:size=14";
