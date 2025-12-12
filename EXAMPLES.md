@@ -189,8 +189,8 @@ programs.zsh = {
   
   shellAliases = {
     ll = "ls -la";
-    update = "sudo nixos-rebuild switch --flake ~/.config/nixos#default";
-    upgrade = "nix flake update ~/.config/nixos && sudo nixos-rebuild switch --flake ~/.config/nixos#default";
+    update = "sudo nixos-rebuild switch --flake .#default";
+    upgrade = "nix flake update && sudo nixos-rebuild switch --flake .#default";
   };
 };
 

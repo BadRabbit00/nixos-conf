@@ -31,6 +31,7 @@
     enable = true;
     shellAliases = {
       ll = "ls -la";
+      # Note: Replace 'default' with your hostname if you changed it in flake.nix
       update = "sudo nixos-rebuild switch --flake .#default";
     };
   };

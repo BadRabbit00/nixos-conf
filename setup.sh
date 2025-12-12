@@ -31,7 +31,8 @@ echo "📝 Step 2: Set hostname"
 read -p "Enter your hostname (or press Enter to skip): " hostname
 if [ ! -z "$hostname" ]; then
     sed -i "s/networking.hostName = \"nixos\"/networking.hostName = \"$hostname\"/" configuration.nix
-    sed -i "s/default = nixpkgs.lib.nixosSystem/$hostname = nixpkgs.lib.nixosSystem/" flake.nix
+    sed -i "s/nixosConfigurations.default/nixosConfigurations.$hostname/" flake.nix
+    sed -i "s/flake .\#default/flake .#$hostname/" home.nix
     echo "✅ Hostname set to: $hostname"
 fi
 
@@ -65,6 +66,10 @@ echo "✨ Setup complete!"
 echo ""
 echo "Next steps:"
 echo "1. Review the generated configuration files"
-echo "2. Run: sudo nixos-rebuild switch --flake .#${hostname:-default}"
+if [ ! -z "$hostname" ]; then
+    echo "2. Run: sudo nixos-rebuild switch --flake .#$hostname"
+else
+    echo "2. Run: sudo nixos-rebuild switch --flake .#default"
+fi
 echo ""
 echo "📚 See README.md for more information"

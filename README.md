@@ -23,6 +23,7 @@ cd ~/nixos-conf
    ```bash
    sudo nixos-generate-config --show-hardware-config > hardware-configuration.nix
    ```
+   **Важно:** Это автоматически определит ваше железо и создаст правильную конфигурацию. Для AMD процессоров также будет автоматически использован `kvm-amd` вместо `kvm-intel`.
 
 2. **Измените hostname в configuration.nix:**
    ```nix
