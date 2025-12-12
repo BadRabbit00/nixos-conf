@@ -7,7 +7,7 @@ fallback_icon="󰤭"
 if ! command -v nmcli >/dev/null 2>&1; then
   case "$1" in
     wifi-icon) echo "$fallback_icon" ;;
-    wifi-label) echo "Wi‑Fi unavailable" ;;
+    wifi-label) echo "Wi-Fi unavailable" ;;
   esac
   exit 0
 fi

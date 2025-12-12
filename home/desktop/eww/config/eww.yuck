@@ -36,6 +36,8 @@
 (defpoll music-values :interval "0.05s"
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
+(defvar time-label "Hitori time")
+
 (defwidget panel []
   (box :class "panel" :orientation "v" :spacing 12 :halign "end" :valign "start"
     (time-tile)
@@ -47,7 +49,7 @@
 
 (defwidget time-tile []
   (box :class "tile tile--time" :orientation "v" :space-evenly false
-    (box :class "time__label" "Hitori time")
+    (box :class "time__label" time-label)
     (box :class "time__value" time-var)))
 
 (defwidget wifi-tile []
