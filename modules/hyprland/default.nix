@@ -30,7 +30,6 @@
     bibata-cursors
     # Fix for SDDM theme error "Qt5Compat.GraphicalEffects is not installed"
     kdePackages.qt5compat
-    kdePackages.qtgraphicaleffects
   ];
   
   # Enable OpenGL
