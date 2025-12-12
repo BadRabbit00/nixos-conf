@@ -10,6 +10,10 @@ $bg-semi: rgba(30, 30, 46, 0.85);
 $bg-alt: #313244;
 $text: #cdd6f4;
 
+// Clipped corner sizes
+$clip-large: 15px;
+$clip-small: 12px;
+
 // Sunset Colors for Visualizer
 $sunset-1: #fab387; // Peach
 $sunset-2: #f38ba8; // Red
@@ -32,12 +36,12 @@ $sunset-3: #f9e2af; // Yellow
   
   // Clipped corners effect (top-left and bottom-right)
   clip-path: polygon(
-    15px 0%, 
+    $clip-large 0%, 
     100% 0%, 
-    100% calc(100% - 15px), 
-    calc(100% - 15px) 100%, 
+    100% calc(100% - $clip-large), 
+    calc(100% - $clip-large) 100%, 
     0% 100%, 
-    0% 15px
+    0% $clip-large
   );
   
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
@@ -114,12 +118,12 @@ $sunset-3: #f9e2af; // Yellow
   border: 2px solid $pink;
   
   clip-path: polygon(
-    15px 0%, 
+    $clip-large 0%, 
     100% 0%, 
-    100% calc(100% - 15px), 
-    calc(100% - 15px) 100%, 
+    100% calc(100% - $clip-large), 
+    calc(100% - $clip-large) 100%, 
     0% 100%, 
-    0% 15px
+    0% $clip-large
   );
   
   transition: all 0.3s ease;
@@ -148,12 +152,12 @@ $sunset-3: #f9e2af; // Yellow
   justify-content: center;
   
   clip-path: polygon(
-    12px 0%, 
+    $clip-small 0%, 
     100% 0%, 
-    100% calc(100% - 12px), 
-    calc(100% - 12px) 100%, 
+    100% calc(100% - $clip-small), 
+    calc(100% - $clip-small) 100%, 
     0% 100%, 
-    0% 12px
+    0% $clip-small
   );
   
   transition: all 0.2s ease;

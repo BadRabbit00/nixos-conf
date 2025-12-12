@@ -57,7 +57,6 @@
 (defvar volume_hover false)
 (defvar keyboard_hover false)
 (defvar power_hover false)
-(defvar power_expanded false)
 
 ;; Time widget (largest block)
 (defwidget time-widget []
