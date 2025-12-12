@@ -37,7 +37,7 @@
       (box :class "bar"
            :style "height: ${h}px;"))))
 
-(defpoll music-values :interval "0.01s"
+(defpoll music-values :interval "0.05s"
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
 (defwidget workspaces []
@@ -63,7 +63,7 @@
   (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
     (metric :label "🔊"
             :value volume
-            :onchange "amixer -D pulse sset Master {}%")
+            :onchange "pamixer --set-volume {}")
     (metric :label "💾"
             :value {EWW_RAM.used_mem_perc}
             :onchange "")
@@ -86,4 +86,4 @@
   "date '+%H:%M %b %d, %Y'")
 
 (defpoll volume :interval "1s"
-  "scripts/getvol")
+  "pamixer --get-volume")

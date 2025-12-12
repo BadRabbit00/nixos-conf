@@ -6,5 +6,8 @@
     configDir = ./config;
   };
 
-  home.packages = [ pkgs.cava ];
+  home.packages = with pkgs; [
+    cava
+    pamixer
+  ];
 }
