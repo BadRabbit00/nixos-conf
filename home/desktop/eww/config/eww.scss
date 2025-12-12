@@ -13,6 +13,11 @@ $cut-small: 10px;
 $radius: 14px;
 $radius-small: 10px;
 
+// Cut top-left and bottom-right corners for the Bocchi blocks.
+@mixin clipped-corners($size) {
+  clip-path: polygon($size 0, 100% 0, 100% calc(100% - $size), calc(100% - $size) 100%, 0 100%, 0 $size);
+}
+
 .panel {
   padding: 6px;
 }
@@ -25,7 +30,7 @@ $radius-small: 10px;
   min-height: 52px;
   min-width: 56px;
   padding: 10px 12px;
-  clip-path: polygon($cut 0, 100% 0, 100% calc(100% - $cut), calc(100% - $cut) 100%, 0 100%, 0 $cut);
+  @include clipped-corners($cut);
   box-shadow: 0 0 18px rgba($pink, 0.25);
   backdrop-filter: blur(8px);
   transition: transform 180ms ease, opacity 180ms ease, box-shadow 200ms ease, background-color 150ms ease;
@@ -147,7 +152,7 @@ $radius-small: 10px;
   color: $text;
   border-radius: $radius-small;
   padding: 6px 10px;
-  clip-path: polygon($cut-small 0, 100% 0, 100% calc(100% - $cut-small), calc(100% - $cut-small) 100%, 0 100%, 0 $cut-small);
+  @include clipped-corners($cut-small);
   transition: transform 140ms ease, background-color 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 

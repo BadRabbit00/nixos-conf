@@ -25,14 +25,18 @@ case "${1:-}" in
     signal="${info#*;}"
     [ -z "$ssid" ] && ssid="Unknown"
     signal="${signal:-0}"
-    [[ "$signal" =~ ^[0-9]+$ ]] || signal=0
+    case "$signal" in
+      ''|*[!0-9]*) signal=0 ;;
+    esac
     echo "${ssid} • ${signal}%"
     ;;
   wifi-icon)
     signal="$(nmcli -t -f ACTIVE,SIGNAL dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}' || true)"
     signal="${signal:-0}"
     signal_int="${signal%%.*}"
-    [[ "$signal_int" =~ ^[0-9]+$ ]] || signal_int=0
+    case "$signal_int" in
+      ''|*[!0-9]*) signal_int=0 ;;
+    esac
     if [ "$signal_int" -ge 80 ]; then
       icon="󰤨"
     elif [ "$signal_int" -ge 60 ]; then
