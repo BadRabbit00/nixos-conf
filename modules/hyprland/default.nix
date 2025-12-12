@@ -28,6 +28,9 @@
     where-is-my-sddm-theme
     # Add other Hyprland essentials here if they are system-wide
     bibata-cursors
+    # Fix for SDDM theme error "Qt5Compat.GraphicalEffects is not installed"
+    kdePackages.qt5compat
+    kdePackages.qtgraphicaleffects
   ];
   
   # Enable OpenGL

@@ -3,8 +3,12 @@
 {
   programs.git = {
     enable = true;
-    userName = "BadRabbit";
-    userEmail = "change-me@example.com";
+    extraConfig = {
+      user = {
+        name = "BadRabbit";
+        email = "change-me@example.com";
+      };
+    };
   };
 
   programs.zsh = {

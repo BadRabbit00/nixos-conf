@@ -6,6 +6,7 @@
     description = "BadRabbit";
     extraGroups = [ "networkmanager" "wheel" ];
     shell = pkgs.zsh;
+    initialPassword = "password";
   };
 
   # Enable Zsh globally so it can be used as a default shell
