@@ -5,7 +5,7 @@
     enable = true;
     settings = {
       main = {
-        terminal = "${pkgs.kitty}/bin/kitty"; # Temporary, will switch to Hyper
+        terminal = "hyper"; 
         layer = "overlay";
         width = 40;
         font = "SpaceMono Nerd Font:size=14";

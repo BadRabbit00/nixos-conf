@@ -14,4 +14,6 @@
     slurp
     wl-clipboard
   ];
+
+  xdg.configFile."hypr/hyprlock.conf".source = ./hyprlock.conf;
 }
