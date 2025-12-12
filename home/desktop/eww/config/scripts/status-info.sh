@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Keep this file executable so eww can poll Wi-Fi status.
+
 set -euo pipefail
 
 fallback_icon="󰤭"
