@@ -84,11 +84,17 @@ $radius-small: 10px;
   transition-delay: 0ms;
 }
 
-.stack .tile:nth-child(1) { transition-delay: 40ms; }
-.stack .tile:nth-child(2) { transition-delay: 80ms; }
-.stack .tile:nth-child(3) { transition-delay: 120ms; }
-.stack .tile:nth-child(4) { transition-delay: 160ms; }
+/* Staggered delays for hover (cascade in) */
+.panel:hover .stack .tile:nth-child(1) { transition-delay: 40ms; }
+.panel:hover .stack .tile:nth-child(2) { transition-delay: 80ms; }
+.panel:hover .stack .tile:nth-child(3) { transition-delay: 120ms; }
+.panel:hover .stack .tile:nth-child(4) { transition-delay: 160ms; }
 
+/* Reverse delays for un-hover (cascade out) */
+.panel:not(:hover) .stack .tile:nth-child(1) { transition-delay: 160ms; }
+.panel:not(:hover) .stack .tile:nth-child(2) { transition-delay: 120ms; }
+.panel:not(:hover) .stack .tile:nth-child(3) { transition-delay: 80ms; }
+.panel:not(:hover) .stack .tile:nth-child(4) { transition-delay: 40ms; }
 .panel:not(:hover) .stack .tile {
   opacity: 0;
   transform: translateY(-14px) scale(0.98);
