@@ -8,10 +8,9 @@ $bg: rgba(20, 24, 36, 0.78);
 $bg-strong: rgba(17, 21, 32, 0.9);
 $text: #e6e9f5;
 $muted: #a6accd;
+$pink-light: #f7d3ed;
 $cut: 12px;
 $cut-small: 10px;
-$radius: 14px;
-$radius-small: 10px;
 
 // Cut top-left and bottom-right corners for the Bocchi blocks.
 @mixin clipped-corners($size) {
@@ -26,7 +25,6 @@ $radius-small: 10px;
   background-color: $bg;
   border: 2px solid $pink;
   color: $text;
-  border-radius: $radius;
   min-height: 52px;
   min-width: 56px;
   padding: 10px 12px;
@@ -75,7 +73,8 @@ $radius-small: 10px;
   opacity: 0;
 }
 
-.panel:hover .stack {
+.panel:hover .stack,
+.panel--open .stack {
   opacity: 1;
   max-height: 360px;
 }
@@ -101,7 +100,8 @@ $radius-small: 10px;
   pointer-events: none;
 }
 
-.panel:hover .stack .tile {
+.panel:hover .stack .tile,
+.panel--open .stack .tile {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
@@ -136,6 +136,10 @@ $radius-small: 10px;
   gap: 6px;
 }
 
+.tile__slider {
+  min-width: 110px;
+}
+
 .power-menu {
   margin-left: 10px;
   display: flex;
@@ -152,6 +156,26 @@ $radius-small: 10px;
   pointer-events: auto;
 }
 
+.tile--power.power-confirm .power-menu--actions {
+  display: none;
+}
+
+.tile--power.power-confirm .power-menu--confirm {
+  display: flex;
+}
+
+.tile--power .power-menu--confirm {
+  display: none;
+}
+
+.stack__close {
+  color: $muted;
+  padding: 6px 8px;
+  background: $bg-strong;
+  border: 1px solid $pink;
+  @include clipped-corners($cut-small);
+}
+
 .power-button {
   background: $bg-strong;
   border: 1px solid $pink;
@@ -165,7 +189,7 @@ $radius-small: 10px;
   background: rgba($pink, 0.16);
   color: $pink;
   transform: translateX(-4px);
-  border-color: #f7d3ed;
+  border-color: $pink-light;
 }
 
 .power-button--accent {

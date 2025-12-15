@@ -37,11 +37,15 @@
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
 (defvar time-label "Hitori time")
+(defvar panel-open false)
+(defvar power-confirm false)
+(defvar power-action "")
 
 (defwidget panel []
-  (box :class "panel" :orientation "v" :spacing 12 :halign "end" :valign "start"
+  (box :class (str "panel " (if panel-open "panel--open" "")) :orientation "v" :spacing 12 :halign "end" :valign "start"
     (time-tile)
     (box :class "stack" :orientation "v" :spacing 10 :halign "end"
+      (button :class "stack__close" :onclick "eww update panel_open=false" "✕")
       (wifi-tile)
       (volume-tile)
       (layout-tile)
@@ -49,45 +53,58 @@
 
 (defwidget time-tile []
   (box :class "tile tile--time" :orientation "v" :space-evenly false
+       :onclick "bash -lc 'if [ \"$(eww get panel_open)\" = \"true\" ]; then eww update panel_open=false; else eww update panel_open=true; fi'"
+       :tooltip "Toggle panel"
     (box :class "time__label" time-label)
     (box :class "time__value" time-var)))
 
 (defwidget wifi-tile []
-  (box :class "tile tile--stacked" :orientation "h" :space-evenly false :tooltip wifi-label
+  (box :class "tile tile--stacked" :orientation "h" :space-evenly false
     (box :class "tile__icon" wifi-icon)
     (box :class "tile__label" wifi-label)))
 
 (defwidget volume-tile []
   (box :class "tile tile--stacked" :orientation "h" :space-evenly false
     (box :class "tile__icon" "󰕾")
-    (box :class "tile__label" (str volume \"%"))))
+    (box :class "tile__label" (str volume \"%"))
+    (scale :class "tile__slider"
+           :min 0
+           :max 100
+           :value volume
+           :onchange "pamixer --set-volume {value}")))
 
 (defwidget layout-tile []
-  (box :class "tile tile--stacked" :orientation "h" :space-evenly false :tooltip layout-label
+  (box :class "tile tile--stacked" :orientation "h" :space-evenly false
     (box :class "tile__icon" "󰌌")
     (box :class "tile__label" layout-label)))
 
 (defwidget power-tile []
-  (box :class "tile tile--stacked tile--power" :orientation "h" :space-evenly false
+  (box :class (str "tile tile--stacked tile--power " (if power-confirm "power-confirm" "")) :orientation "h" :space-evenly false
     (box :class "tile__icon" "⏻")
     (box :class "tile__label" "Power")
-    (box :class "power-menu" :orientation "h" :spacing 6
+    (box :class "power-menu power-menu--actions" :orientation "h" :spacing 6
       (button :class "power-button" :tooltip "Lock" :onclick "loginctl lock-session" "󰌾")
-      (button :class "power-button" :tooltip "Sleep" :onclick "systemctl suspend" "󰤄")
-      (button :class "power-button" :tooltip "Reboot" :onclick "systemctl reboot" "󰑐")
-      (button :class "power-button power-button--accent" :tooltip "Power Off" :onclick "systemctl poweroff" "󰐥"))))
+      (button :class "power-button" :tooltip "Sleep" :onclick "eww update power_confirm=true power_action='suspend'" "󰤄")
+      (button :class "power-button" :tooltip "Reboot" :onclick "eww update power_confirm=true power_action='reboot'" "󰑐")
+      (button :class "power-button power-button--accent" :tooltip "Power Off" :onclick "eww update power_confirm=true power_action='poweroff'" "󰐥"))
+    (box :class "power-menu power-menu--confirm" :orientation "h" :spacing 6
+      (box :class "power-confirm__label" "Confirm?")
+      (button :class "power-button" :tooltip "Cancel" :onclick "eww update power_confirm=false power_action=''" "✕")
+      (button :class "power-button power-button--accent"
+              :tooltip "Confirm action"
+              :onclick "bash -lc 'act=\"$(eww get power_action)\"; case \"$act\" in reboot) systemctl reboot ;; poweroff) systemctl poweroff ;; suspend) systemctl suspend ;; esac; eww update power_confirm=false power_action='\"\"''" "✓"))))
 
 (defpoll time-var :interval "1s"
   "date '+%H:%M %b %d, %Y'")
 
-(defpoll volume :interval "1s"
+(defpoll volume :interval "3s"
   "pamixer --get-volume")
 
 (defpoll wifi-icon :interval "5s"
-  "~/.config/eww/scripts/status-info.sh wifi-icon")
+  "${EWW_CONFIG_DIR}/scripts/status-info.sh wifi-icon")
 
 (defpoll wifi-label :interval "5s"
-  "~/.config/eww/scripts/status-info.sh wifi-label")
+  "${EWW_CONFIG_DIR}/scripts/status-info.sh wifi-label")
 
 (defpoll layout-label :interval "2s"
-  "~/.config/eww/scripts/layout-label.sh")
+  "${EWW_CONFIG_DIR}/scripts/layout-label.sh")
