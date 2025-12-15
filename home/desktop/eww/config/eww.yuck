@@ -1,18 +1,14 @@
 (defwindow bar
   :monitor 0
-  :geometry (geometry :x "0%"
+  :geometry (geometry :x "10px"
                       :y "10px"
-                      :width "98%"
-                      :height "40px"
-                      :anchor "top center")
+                      :width "260px"
+                      :height "auto"
+                      :anchor "top right")
   :stacking "fg"
-  :reserve (struts :distance "50px" :side "top")
   :windowtype "dock"
   :wm-ignore false
-  (centerbox :orientation "h"
-    (workspaces)
-    (time)
-    (sidestuff)))
+  (panel))
 
 (defwindow visualizer
   :monitor 0
@@ -40,50 +36,75 @@
 (defpoll music-values :interval "0.05s"
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
-(defwidget workspaces []
-  (box :class "workspaces"
-       :orientation "h"
-       :space-evenly true
-       :halign "start"
-       :spacing 10
-    (button :onclick "hyprctl dispatch workspace 1" 1)
-    (button :onclick "hyprctl dispatch workspace 2" 2)
-    (button :onclick "hyprctl dispatch workspace 3" 3)
-    (button :onclick "hyprctl dispatch workspace 4" 4)
-    (button :onclick "hyprctl dispatch workspace 5" 5)))
+(defvar time-label "Hitori time")
+(defvar panel-open false)
+(defvar power-confirm false)
+(defvar power-action "")
 
-(defwidget time []
-  (box :class "time"
-       :orientation "h"
-       :space-evenly false
-       :halign "center"
-    time-var))
+(defwidget panel []
+  (box :class (str "panel " (if panel-open "panel--open" "")) :orientation "v" :spacing 12 :halign "end" :valign "start"
+    (time-tile)
+    (box :class "stack" :orientation "v" :spacing 10 :halign "end"
+      (button :class "stack__close" :onclick "eww update panel_open=false" "✕")
+      (wifi-tile)
+      (volume-tile)
+      (layout-tile)
+      (power-tile)))))
 
-(defwidget sidestuff []
-  (box :class "sidestuff" :orientation "h" :space-evenly false :halign "end"
-    (metric :label "🔊"
-            :value volume
-            :onchange "pamixer --set-volume {}")
-    (metric :label "💾"
-            :value {EWW_RAM.used_mem_perc}
-            :onchange "")
-    (metric :label "🔋"
-            :value {EWW_BATTERY.BAT0.capacity}
-            :onchange "")))
+(defwidget time-tile []
+  (box :class "tile tile--time" :orientation "v" :space-evenly false
+       :onclick "bash -lc 'if [ \"$(eww get panel_open)\" = \"true\" ]; then eww update panel_open=false; else eww update panel_open=true; fi'"
+       :tooltip "Toggle panel"
+    (box :class "time__label" time-label)
+    (box :class "time__value" time-var)))
 
-(defwidget metric [label value onchange]
-  (box :orientation "h"
-       :class "metric"
-       :space-evenly false
-    (box :class "label" label)
-    (scale :min 0
-           :max 101
-           :active {onchange != ""}
-           :value value
-           :onchange onchange)))
+(defwidget wifi-tile []
+  (box :class "tile tile--stacked" :orientation "h" :space-evenly false
+    (box :class "tile__icon" wifi-icon)
+    (box :class "tile__label" wifi-label)))
+
+(defwidget volume-tile []
+  (box :class "tile tile--stacked" :orientation "h" :space-evenly false
+    (box :class "tile__icon" "󰕾")
+    (box :class "tile__label" (str volume \"%"))
+    (scale :class "tile__slider"
+           :min 0
+           :max 100
+           :value volume
+           :onchange "pamixer --set-volume {value}")))
+
+(defwidget layout-tile []
+  (box :class "tile tile--stacked" :orientation "h" :space-evenly false
+    (box :class "tile__icon" "󰌌")
+    (box :class "tile__label" layout-label)))
+
+(defwidget power-tile []
+  (box :class (str "tile tile--stacked tile--power " (if power-confirm "power-confirm" "")) :orientation "h" :space-evenly false
+    (box :class "tile__icon" "⏻")
+    (box :class "tile__label" "Power")
+    (box :class "power-menu power-menu--actions" :orientation "h" :spacing 6
+      (button :class "power-button" :tooltip "Lock" :onclick "loginctl lock-session" "󰌾")
+      (button :class "power-button" :tooltip "Sleep" :onclick "eww update power_confirm=true power_action='suspend'" "󰤄")
+      (button :class "power-button" :tooltip "Reboot" :onclick "eww update power_confirm=true power_action='reboot'" "󰑐")
+      (button :class "power-button power-button--accent" :tooltip "Power Off" :onclick "eww update power_confirm=true power_action='poweroff'" "󰐥"))
+    (box :class "power-menu power-menu--confirm" :orientation "h" :spacing 6
+      (box :class "power-confirm__label" "Confirm?")
+      (button :class "power-button" :tooltip "Cancel" :onclick "eww update power_confirm=false power_action=''" "✕")
+      (button :class "power-button power-button--accent"
+              :tooltip "Confirm action"
+              :onclick "bash -lc 'act=\"$(eww get power_action)\"; case \"$act\" in reboot) systemctl reboot ;; poweroff) systemctl poweroff ;; suspend) systemctl suspend ;; esac; eww update power_confirm=false power_action='\"\"''" "✓"))))
 
 (defpoll time-var :interval "1s"
   "date '+%H:%M %b %d, %Y'")
 
-(defpoll volume :interval "1s"
+(defpoll volume :interval "3s"
   "pamixer --get-volume")
+
+(defpoll wifi-icon :interval "5s"
+  "${EWW_CONFIG_DIR}/scripts/status-info.sh wifi-icon")
+
+(defpoll wifi-label :interval "5s"
+  "${EWW_CONFIG_DIR}/scripts/status-info.sh wifi-label")
+
+(defpoll layout-label :interval "2s"
+  "${EWW_CONFIG_DIR}/scripts/layout-label.sh")

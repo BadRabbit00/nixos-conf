@@ -3,69 +3,203 @@
   font-family: "SpaceMono Nerd Font";
 }
 
-// Hitori (Bocchi) Theme Colors
 $pink: #f5c2e7;
-$bg: #1e1e2e;
-$bg-alt: #313244;
-$text: #cdd6f4;
+$bg: rgba(20, 24, 36, 0.78);
+$bg-strong: rgba(17, 21, 32, 0.9);
+$text: #e6e9f5;
+$muted: #a6accd;
+$pink-light: #f7d3ed;
+$cut: 12px;
+$cut-small: 10px;
 
-// Sunset Colors for Visualizer
-$sunset-1: #fab387; // Peach
-$sunset-2: #f38ba8; // Red
-$sunset-3: #f9e2af; // Yellow
+// Cut top-left and bottom-right corners for the Bocchi blocks.
+@mixin clipped-corners($size) {
+  clip-path: polygon($size 0, 100% 0, 100% calc(100% - $size), calc(100% - $size) 100%, 0 100%, 0 $size);
+}
 
-.bar {
+.panel {
+  padding: 6px;
+}
+
+.tile {
   background-color: $bg;
-  border-radius: 10px;
-  border: 1px solid $pink; // Bocchi accent
-}
-
-.workspaces button {
-  padding: 5px 10px;
-  background-color: $bg-alt;
+  border: 2px solid $pink;
   color: $text;
-  border-radius: 5px;
+  min-height: 52px;
+  min-width: 56px;
+  padding: 10px 12px;
+  @include clipped-corners($cut);
+  box-shadow: 0 0 18px rgba($pink, 0.25);
+  backdrop-filter: blur(8px);
+  transition: transform 180ms ease, opacity 180ms ease, box-shadow 200ms ease, background-color 150ms ease;
 }
 
-.workspaces button:hover {
-  background-color: $pink;
-  color: $bg;
+.tile:hover {
+  transform: translateX(-6px);
+  background-color: $bg-strong;
+  box-shadow: 0 0 24px rgba($pink, 0.32);
 }
 
-.time {
-  font-size: 16px;
-  font-weight: bold;
-  color: $pink; // Bocchi accent
+.tile--time {
+  min-width: 220px;
+  align-items: flex-start;
+  gap: 4px;
 }
 
-.metric {
-  margin-left: 20px;
+.time__label {
+  font-size: 12px;
+  color: $muted;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.metric .label {
-  font-size: 20px;
+.time__value {
+  font-size: 26px;
+  font-weight: 700;
+  color: $text;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 360px;
+  overflow: hidden;
+  transition: max-height 220ms ease, opacity 200ms ease;
+}
+
+.panel:not(:hover) .stack {
+  max-height: 0;
+  opacity: 0;
+}
+
+.panel:hover .stack,
+.panel--open .stack {
+  opacity: 1;
+  max-height: 360px;
+}
+
+.stack .tile {
+  transition-delay: 0ms;
+}
+
+/* Staggered delays for hover (cascade in) */
+.panel:hover .stack .tile:nth-child(1) { transition-delay: 40ms; }
+.panel:hover .stack .tile:nth-child(2) { transition-delay: 80ms; }
+.panel:hover .stack .tile:nth-child(3) { transition-delay: 120ms; }
+.panel:hover .stack .tile:nth-child(4) { transition-delay: 160ms; }
+
+/* Reverse delays for un-hover (cascade out) */
+.panel:not(:hover) .stack .tile:nth-child(1) { transition-delay: 160ms; }
+.panel:not(:hover) .stack .tile:nth-child(2) { transition-delay: 120ms; }
+.panel:not(:hover) .stack .tile:nth-child(3) { transition-delay: 80ms; }
+.panel:not(:hover) .stack .tile:nth-child(4) { transition-delay: 40ms; }
+.panel:not(:hover) .stack .tile {
+  opacity: 0;
+  transform: translateY(-14px) scale(0.98);
+  pointer-events: none;
+}
+
+.panel:hover .stack .tile,
+.panel--open .stack .tile {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.tile__icon {
+  font-size: 18px;
   color: $pink;
 }
 
-.metric scale trough {
-  all: unset;
-  background-color: $bg-alt;
-  border-radius: 10px;
-  min-height: 10px;
-  min-width: 100px;
+.tile__label {
+  font-size: 14px;
+  color: $text;
+  opacity: 0;
+  max-width: 0;
+  margin-right: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 140ms ease, max-width 200ms ease, margin-right 140ms ease;
+}
+
+.tile:hover .tile__label {
+  opacity: 1;
+  max-width: 200px;
+  margin-right: 8px;
+}
+
+.tile--stacked {
+  min-width: 64px;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.tile__slider {
+  min-width: 110px;
+}
+
+.power-menu {
   margin-left: 10px;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease, max-width 180ms ease;
 }
 
-.metric scale trough highlight {
-  all: unset;
-  background-color: $pink;
-  border-radius: 10px;
+.tile--power:hover .power-menu {
+  opacity: 1;
+  max-width: 280px;
+  pointer-events: auto;
 }
 
-// Visualizer Styles
+.tile--power.power-confirm .power-menu--actions {
+  display: none;
+}
+
+.tile--power.power-confirm .power-menu--confirm {
+  display: flex;
+}
+
+.tile--power .power-menu--confirm {
+  display: none;
+}
+
+.stack__close {
+  color: $muted;
+  padding: 6px 8px;
+  background: $bg-strong;
+  border: 1px solid $pink;
+  @include clipped-corners($cut-small);
+}
+
+.power-button {
+  background: $bg-strong;
+  border: 1px solid $pink;
+  color: $text;
+  padding: 6px 10px;
+  @include clipped-corners($cut-small);
+  transition: transform 140ms ease, background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.power-button:hover {
+  background: rgba($pink, 0.16);
+  color: $pink;
+  transform: translateX(-4px);
+  border-color: $pink-light;
+}
+
+.power-button--accent {
+  background: rgba($pink, 0.2);
+  color: $pink;
+}
+
 .music-viz .bar {
   width: 30px;
   border-radius: 15px 15px 0 0;
-  background-image: linear-gradient(to top, $sunset-2, $sunset-1, $sunset-3);
+  background-image: linear-gradient(to top, #f38ba8, #fab387, #f9e2af);
   opacity: 0.8;
 }
