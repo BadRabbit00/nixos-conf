@@ -1,7 +1,7 @@
 ;; Main panel window positioned at top-right
 (defwindow panel
   :monitor 0
-  :geometry (geometry :x "10px"
+  :geometry (geometry :x "-10px"
                       :y "10px"
                       :width "80px"
                       :height "400px"
@@ -9,14 +9,14 @@
   :stacking "fg"
   :windowtype "dock"
   :wm-ignore false
-  (eventbox :onhover "eww update panel_hover=true"
-            :onhoverlost "eww update panel_hover=false"
+  (eventbox :onhover "eww update panel-hover=true"
+            :onhoverlost "eww update panel-hover=false"
     (box :class "panel-container"
          :orientation "v"
          :space-evenly false
          :spacing 10
       (time-widget)
-      (revealer :reveal panel_hover
+      (revealer :reveal panel-hover
                 :transition "slidedown"
                 :duration "300ms"
         (box :orientation "v" :spacing 10
@@ -52,11 +52,11 @@
   "cava -p ~/.config/eww/cava.conf | python3 ~/.config/eww/scripts/cava-reader.py")
 
 ;; Variables
-(defvar panel_hover false)
-(defvar wifi_hover false)
-(defvar volume_hover false)
-(defvar keyboard_hover false)
-(defvar power_hover false)
+(defvar panel-hover false)
+(defvar wifi-hover false)
+(defvar volume-hover false)
+(defvar keyboard-hover false)
+(defvar power-hover false)
 
 ;; Time widget (largest block)
 (defwidget time-widget []
@@ -67,51 +67,51 @@
 
 ;; WiFi widget with expansion
 (defwidget wifi-widget []
-  (eventbox :onhover "eww update wifi_hover=true"
-            :onhoverlost "eww update wifi_hover=false"
+  (eventbox :onhover "eww update wifi-hover=true"
+            :onhoverlost "eww update wifi-hover=false"
     (box :class "widget wifi-widget"
          :orientation "h"
          :space-evenly false
       (label :class "icon" :text "")
-      (revealer :reveal wifi_hover
+      (revealer :reveal wifi-hover
                 :transition "slideleft"
                 :duration "200ms"
         (label :class "info" :text wifi-name)))))
 
 ;; Volume widget with expansion
 (defwidget volume-widget []
-  (eventbox :onhover "eww update volume_hover=true"
-            :onhoverlost "eww update volume_hover=false"
+  (eventbox :onhover "eww update volume-hover=true"
+            :onhoverlost "eww update volume-hover=false"
     (box :class "widget volume-widget"
          :orientation "h"
          :space-evenly false
       (label :class "icon" :text "")
-      (revealer :reveal volume_hover
+      (revealer :reveal volume-hover
                 :transition "slideleft"
                 :duration "200ms"
         (label :class "info" :text "${volume}%")))))
 
 ;; Keyboard layout widget with expansion
 (defwidget keyboard-widget []
-  (eventbox :onhover "eww update keyboard_hover=true"
-            :onhoverlost "eww update keyboard_hover=false"
+  (eventbox :onhover "eww update keyboard-hover=true"
+            :onhoverlost "eww update keyboard-hover=false"
     (box :class "widget keyboard-widget"
          :orientation "h"
          :space-evenly false
       (label :class "icon" :text keyboard-short)
-      (revealer :reveal keyboard_hover
+      (revealer :reveal keyboard-hover
                 :transition "slideleft"
                 :duration "200ms"
         (label :class "info" :text keyboard-full)))))
 
 ;; Power widget with submenu
 (defwidget power-widget []
-  (eventbox :onhover "eww update power_hover=true"
-            :onhoverlost "eww update power_hover=false; eww update power_expanded=false"
+  (eventbox :onhover "eww update power-hover=true"
+            :onhoverlost "eww update power-hover=false"
     (box :class "widget power-widget-container"
          :orientation "h"
          :space-evenly false
-      (revealer :reveal power_hover
+      (revealer :reveal power-hover
                 :transition "slideleft"
                 :duration "200ms"
         (box :orientation "h" :spacing 5 :class "power-submenu"
@@ -130,8 +130,8 @@
 (defpoll wifi-name :interval "5s"
   "nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2 || echo 'No WiFi'")
 
-(defpoll keyboard-short :interval "1s"
-  "hyprctl devices -j | jq -r '.keyboards[0].active_keymap' | cut -c1-2 | tr '[:lower:]' '[:upper:]' || echo 'EN'")
+(defpoll keyboard-short :interval "5s"
+  "hyprctl devices -j | jq -r '.keyboards[0]?.active_keymap // \"English (US)\"' | cut -c1-2 | tr '[:lower:]' '[:upper:]' || echo 'EN'")
 
-(defpoll keyboard-full :interval "1s"
-  "hyprctl devices -j | jq -r '.keyboards[0].active_keymap' | sed 's/English (US)/English/;s/Russian/Russian/' || echo 'English'")
+(defpoll keyboard-full :interval "5s"
+  "hyprctl devices -j | jq -r '.keyboards[0]?.active_keymap // \"English (US)\"' | sed 's/English (US)/English/;s/Russian/Russian/' || echo 'English'")
