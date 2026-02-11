@@ -10,5 +10,10 @@
     executable = true;
   };
 
+  # Если ты положишь сюда wall.png, он станет твоими обоями по умолчанию
+  xdg.configFile."swww/wall.png" = {
+    source = ./wall.png;
+  };
+
   xdg.configFile."swww/templates".source = ./templates;
 }
