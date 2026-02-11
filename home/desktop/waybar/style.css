@@ -1,0 +1,31 @@
+@import "../../.cache/matugen/colors.css";
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "SpaceMono Nerd Font";
+    font-size: 14px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: @background;
+    color: @foreground;
+    border-bottom: 2px solid @primary;
+}
+
+#workspaces button {
+    padding: 0 5px;
+    background: transparent;
+    color: @foreground;
+}
+
+#workspaces button.active {
+    background: @primary;
+    color: @on_primary;
+}
+
+#clock, #pulseaudio, #network, #cpu, #memory, #tray {
+    padding: 0 10px;
+    color: @foreground;
+}

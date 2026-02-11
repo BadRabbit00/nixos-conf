@@ -18,6 +18,10 @@
     # System Tray Tools
     networkmanagerapplet # Network icon in tray
     pasystray            # Audio icon in tray
+
+    # Theming Tools
+    matugen
+    hyprpicker
   ];
 
   # Configure Nano

@@ -15,21 +15,21 @@
     _JAVA_AWT_WM_NONREPARENTING = "1";
   };
 
-  # Display Manager (SDDM)
-  services.displayManager.sddm = {
+  # Display Manager (greetd)
+  services.greetd = {
     enable = true;
-    wayland.enable = true;
-    # We will use a nice theme. 'where-is-my-sddm-theme' is a popular clean choice in nixpkgs.
-    # theme = "where_is_my_sddm_theme";
+    settings = {
+      default_session = {
+        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd Hyprland";
+        user = "greeter";
+      };
+    };
   };
 
-  # Install the theme
+  # Install essential system packages
   environment.systemPackages = with pkgs; [
-    # where-is-my-sddm-theme # Broken on Qt6 currently
-    # Add other Hyprland essentials here if they are system-wide
     bibata-cursors
-    # Fix for SDDM theme error "Qt5Compat.GraphicalEffects is not installed"
-    kdePackages.qt5compat
+    tuigreet
   ];
   
   # Enable OpenGL
