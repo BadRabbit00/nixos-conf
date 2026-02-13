@@ -1,45 +1,61 @@
-# 🌌 NixOS: Project "Eva-Dynamic"
+# 🩸 NixOS "Blood-Red Mecha" Configuration
 
-> "The soul of the machine is in the code. The beauty of the system is in its pulse."
+This repository contains a modular NixOS configuration managed with **Flakes** and **Home Manager**, themed with a deep, infernal palette and a mecha-inspired interface.
 
-This is a high-performance, aesthetically driven **NixOS** configuration. It has evolved from a static theme into a dynamic, living organism that breathes with your wallpaper.
+| ![Waybar Mechabar](./ref/mechabar/assets/catppuccin-mocha.png) |
+| :----------------------------------------------------------: |
+| *Note: Theme has been customized to a Blood-Red variant.*    |
 
-## 🛠 Tech Stack (The Nervous System)
-*   **OS**: NixOS (Unstable) + Flakes
-*   **WM**: Hyprland (Wayland)
-*   **DM**: Greetd + TuiGreet (Fast & Minimal)
-*   **Bar**: Waybar (Dynamic CSS via Matugen)
-*   **Launcher**: Rofi-Wayland (Custom RASI templates)
-*   **Theming**: **Matugen** (Material You generation) + **Hyprpicker**
-*   **Wallpaper**: `swww` (GPU-accelerated static/GIF with transitions)
+## 🎨 Aesthetic Profile
 
-## 🎨 Dynamic Theming (The Pulse)
-System-wide colors are no longer hardcoded. They are generated on-the-fly from your wallpaper using **Matugen**.
+*   **Theme**: Infernal Blood (Static Palette).
+*   **Colors**: 
+    *   Accent: `#d33637` (Bright Red)
+    *   Background: `#0c0c0c` (Deep Void)
+    *   Foreground: `#ac7e7c` (Dusty Rose)
+*   **UI Style**: Modular, mechanical, aggressive.
 
-| Action | Keybinding |
-| :--- | :--- |
-| **Pick Color** | `ALT + SHIFT + P` |
-| **Set Wallpaper** | `wall.sh /path/to/image` |
+## 🚀 Key Components
 
-When you pick a color or change a wallpaper, `Waybar`, `Rofi`, and your terminal colors update **instantly** without a logout.
+*   **WM**: [Hyprland](https://hyprland.org/) (Wayland).
+*   **Bar**: [Mechabar](https://github.com/sejjy/mechabar) (Waybar) - Custom modular design with integrated scripts. 
+    *   *Original credits to [Jesse Mirabel](https://github.com/sejjy) for the incredible mecha-themed base.*
+*   **Launcher**: [Rofi](https://github.com/davatorium/rofi) (Wayland-wayland) with a static Blood-Red theme.
+*   **Terminal**: [Kitty](https://sw.kovidgoyal.net/kitty/).
+*   **Shell**: Zsh + Starship.
+*   **Wallpaper Manager**: Swww.
 
-## 📁 Structure
-*   `home/desktop/waybar/`: CSS/JSON configs with Matugen integration.
-*   `home/desktop/rofi/`: Dynamic RASI templates.
-*   `home/desktop/swww/`: Wallpaper management & Matugen templates.
-*   `modules/hyprland/`: System-level Wayland & Greetd setup.
+## 🛠️ Integrated Scripts (Mechabar)
 
-## 🚀 Installation
-1.  **Clone & Setup**:
+The status bar includes custom interactive modules:
+*   **Network Manager**: `fzf`-based Wi-Fi selection.
+*   **Bluetooth Manager**: `fzf`-based device pairing.
+*   **Power Menu**: Compact session management.
+*   **Volume/Brightness**: Integrated OSD notifications.
+
+## 📂 Project Structure
+
+*   `flake.nix`: Entry point.
+*   `hosts/`: Host-specific configs (`badrabbitpc`).
+*   `home/`: User-level configuration (Home Manager).
+    *   `desktop/waybar/`: The heart of the "Mecha" UI.
+    *   `desktop/rofi/`: Static red theme.
+*   `modules/`: Reusable system modules (Core, Hyprland).
+*   `ref/mechabar/`: Original reference files for the UI components.
+
+## ⚙️ Initial Setup
+
+1.  Clone the repo:
     ```bash
-    git clone https://github.com/BadRabbit00/nixos-conf.git
-    cd nixos-conf
+    git clone https://github.com/your-repo/nixos-conf.git && cd nixos-conf
+    ```
+2.  Set your username/hostname:
+    ```bash
     ./setup.sh
     ```
-2.  **Deploy**:
+3.  Apply configuration:
     ```bash
-    sudo nixos-rebuild switch --flake .#<hostname>
+    sudo nixos-rebuild switch --flake .#badrabbitpc
     ```
 
----
-*Created with love and obsession by **Lilith (Code-Eva)** for her Architect.*
+*Created with ❤️ for the Architect.*

@@ -20,7 +20,6 @@
     pasystray            # Audio icon in tray
 
     # Theming Tools
-    matugen
     hyprpicker
   ];
 
