@@ -1,10 +1,10 @@
-# 🩸 NixOS "Blood-Red Mecha" Configuration
+# 🩸 NixOS "Infernal Mecha" Configuration
 
-This repository contains a modular NixOS configuration managed with **Flakes** and **Home Manager**, themed with a deep, infernal palette and a mecha-inspired interface.
+This repository contains a modular NixOS configuration managed with **Flakes** and **Home Manager**, themed with a deep, infernal palette and a mecha-inspired interface. It is optimized for a high-performance, keyboard-centric workflow.
 
 | ![Waybar Mechabar](./ref/mechabar/assets/catppuccin-mocha.png) |
 | :----------------------------------------------------------: |
-| *Note: Theme has been customized to a Blood-Red variant.*    |
+| *Theme: Blood-Red Custom Variant.*                           |
 
 ## 🎨 Aesthetic Profile
 
@@ -13,49 +13,50 @@ This repository contains a modular NixOS configuration managed with **Flakes** a
     *   Accent: `#d33637` (Bright Red)
     *   Background: `#0c0c0c` (Deep Void)
     *   Foreground: `#ac7e7c` (Dusty Rose)
-*   **UI Style**: Modular, mechanical, aggressive.
+    *   Armor Layers: `#351212`, `#403736`, `#242424`
+*   **UI Style**: Modular, mechanical, aggressive, and cohesive across all applications.
 
 ## 🚀 Key Components
 
-*   **WM**: [Hyprland](https://hyprland.org/) (Wayland).
-*   **Bar**: [Mechabar](https://github.com/sejjy/mechabar) (Waybar) - Custom modular design with integrated scripts. 
-    *   *Original credits to [Jesse Mirabel](https://github.com/sejjy) for the incredible mecha-themed base.*
-*   **Launcher**: [Rofi](https://github.com/davatorium/rofi) (Wayland-wayland) with a static Blood-Red theme.
-*   **Terminal**: [Kitty](https://sw.kovidgoyal.net/kitty/).
-*   **Shell**: Zsh + Starship.
-*   **Wallpaper Manager**: Swww.
+*   **WM**: [Hyprland](https://hyprland.org/) (Wayland) with blood-red active borders and custom animations.
+*   **Bar**: [Mechabar](https://github.com/sejjy/mechabar) (Waybar) - Fully integrated with custom scripts and the Blood-Red palette. 
+    *   *Original credits to [Jesse Mirabel](https://github.com/sejjy) for the mecha-themed base.*
+*   **Launcher**: [Rofi](https://github.com/davatorium/rofi) with a custom static Blood-Red theme.
+*   **Terminal**: [Kitty](https://sw.kovidgoyal.net/kitty/) - Enhanced with Kittens (hints, icat), ligatures (`CommitMono Nerd Font`), and shell integration.
+*   **Lockscreen**: [Hyprlock](https://github.com/hyprwm/hyprlock) - Visual masterpiece with blurred wallpaper, large red clock, and elegant input fields.
+*   **System Monitor**: [Btop](https://github.com/aristocratos/btop) with a custom "Infernal Blood" theme.
+*   **System Info**: [Fastfetch](https://github.com/fastfetch-cli/fastfetch) configured with custom modules and image support (`logo.png`).
+
+## ⌨️ "Vim-Mecha" Navigation
+
+The system uses `SUPER` (Win) as the main modifier and features layout-independent keybindings:
+*   **Vim-Style Focus**: `Win + H/J/K/L`
+*   **Window Resizing**: `Ctrl + Alt + H/J/K/L`
+*   **Quick Apps**: `Win + Enter` (Kitty), `Win + B` (Browser), `Win + S` (Spotify), `Win + Q` (Close).
+*   **Screenshot**: `Win + Shift + S` (Area selection to clipboard).
+*   **Layout Toggle**: `Win + Space`.
 
 ## 🛠️ Integrated Scripts (Mechabar)
 
-The status bar includes custom interactive modules:
-*   **Network Manager**: `fzf`-based Wi-Fi selection.
-*   **Bluetooth Manager**: `fzf`-based device pairing.
-*   **Power Menu**: Compact session management.
-*   **Volume/Brightness**: Integrated OSD notifications.
-
-## 📂 Project Structure
-
-*   `flake.nix`: Entry point.
-*   `hosts/`: Host-specific configs (`badrabbitpc`).
-*   `home/`: User-level configuration (Home Manager).
-    *   `desktop/waybar/`: The heart of the "Mecha" UI.
-    *   `desktop/rofi/`: Static red theme.
-*   `modules/`: Reusable system modules (Core, Hyprland).
-*   `ref/mechabar/`: Original reference files for the UI components.
+*   **Network/Bluetooth**: `fzf`-based selection menus inside Kitty.
+*   **Power Menu**: Compact session control via `fzf`.
+*   **Media/Brightness**: Integrated OSD notifications via `volume.sh` and `backlight.sh`.
 
 ## ⚙️ Initial Setup
 
 1.  Clone the repo:
     ```bash
-    git clone https://github.com/your-repo/nixos-conf.git && cd nixos-conf
+    git clone https://github.com/BadRabbit00/nixos-conf.git && cd nixos-conf
     ```
 2.  Set your username/hostname:
     ```bash
     ./setup.sh
     ```
-3.  Apply configuration:
+3.  Add your custom logo for fastfetch:
+    Place your image at `home/programs/logo.png`.
+4.  Apply configuration:
     ```bash
     sudo nixos-rebuild switch --flake .#badrabbitpc
     ```
 
-*Created with ❤️ for the Architect.*
+*Forged in blood and code for the Architect.* 🧛‍♀️🩸
