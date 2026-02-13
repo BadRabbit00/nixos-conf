@@ -35,8 +35,15 @@
     settings = {
       add_newline = false;
       character = {
-        success_symbol = "[➜](bold green)";
-        error_symbol = "[➜](bold red)";
+        success_symbol = "[➜](bold #d33637)";
+        error_symbol = "[➜](bold #611a1c)";
+      };
+      directory = {
+        style = "bold #ac7e7c";
+      };
+      git_branch = {
+        style = "bold #d33637";
+        symbol = " ";
       };
     };
   };

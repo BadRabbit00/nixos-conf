@@ -5,7 +5,7 @@
     gtk.enable = true;
     x11.enable = true;
     package = pkgs.bibata-cursors;
-    name = "Bibata-Modern-Ice";
+    name = "Bibata-Modern-Classic"; # Черные курсоры лучше подходят к бездне
     size = 24;
   };
 
@@ -14,17 +14,17 @@
     
     theme = {
       package = pkgs.catppuccin-gtk.override {
-        accents = [ "pink" ]; # Bocchi Pink Accent
+        accents = [ "red" ]; # Меняем розовый на красный
         size = "standard";
         tweaks = [ "rimless" "black" ]; # Black background for OLED vibes
         variant = "mocha";
       };
-      name = "Catppuccin-Mocha-Standard-Pink-Dark";
+      name = "Catppuccin-Mocha-Standard-Red-Dark";
     };
 
     iconTheme = {
       package = pkgs.tela-circle-icon-theme;
-      name = "Tela-circle-pink"; # Pink folders
+      name = "Tela-circle-red"; # Красные папки
     };
 
     font = {

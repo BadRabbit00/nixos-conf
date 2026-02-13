@@ -1,5 +1,13 @@
+@define-color background #0c0c0c;
+@define-color background-alt #242424;
+@define-color foreground #ac7e7c;
+@define-color selected #d33637;
+@define-color accent #d33637;
+@define-color border #351212;
+
 * {
   font-family: "SpaceMono Nerd Font";
+  color: @foreground;
 }
 
 .notification-row {
@@ -8,13 +16,56 @@
 
 .notification-row:focus,
 .notification-row:hover {
-  background: #313244;
+  background: @background-alt;
 }
 
 .notification {
+  border: 1px solid @border;
   border-radius: 12px;
   margin: 6px 12px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.7),
-    0 2px 6px 2px rgba(0, 0, 0, 0.3);
-  padding: 0;
+  background-color: @background;
+  padding: 10px;
+}
+
+.notification-content {
+  background: transparent;
+}
+
+.notification-title {
+  color: @selected;
+  font-weight: bold;
+}
+
+.notification-body {
+  color: @foreground;
+}
+
+.notification-action {
+  background: @background-alt;
+  border: 1px solid @border;
+  border-radius: 8px;
+}
+
+.notification-action:hover {
+  background: @selected;
+  color: @background;
+}
+
+.control-center {
+  background: @background;
+  border: 2px solid @selected;
+  border-radius: 12px;
+}
+
+.widget-title {
+  color: @selected;
+  font-size: 1.2em;
+  margin: 10px;
+}
+
+.widget-clear {
+  color: @background;
+  background: @selected;
+  padding: 5px;
+  border-radius: 8px;
 }
