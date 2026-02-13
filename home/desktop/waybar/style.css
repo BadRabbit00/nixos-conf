@@ -1,4 +1,9 @@
-@import "../../.cache/matugen/colors.css";
+/* Infernal Blood Static Theme */
+@define-color accent     #d33637;
+@define-color main-bg    #0c0c0c;
+@define-color main-fg    #ac7e7c;
+@define-color hover-bg   #611a1c;
+@define-color outline    #351212;
 
 * {
     border: none;
@@ -9,23 +14,11 @@
 }
 
 window#waybar {
-    background: @background;
-    color: @foreground;
-    border-bottom: 2px solid @primary;
+    background: @outline;
+    color: @main-fg;
 }
 
-#workspaces button {
-    padding: 0 5px;
-    background: transparent;
-    color: @foreground;
-}
-
-#workspaces button.active {
-    background: @primary;
-    color: @on_primary;
-}
-
-#clock, #pulseaudio, #network, #cpu, #memory, #tray {
-    padding: 0 10px;
-    color: @foreground;
+window#waybar > box {
+    margin: 4px;
+    background-color: @main-bg;
 }

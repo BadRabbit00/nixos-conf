@@ -57,5 +57,6 @@
     jq       # JSON processor
     btop     # Better htop
     fastfetch # System info
+    nodejs   # Required for gemini-cli
   ];
 }

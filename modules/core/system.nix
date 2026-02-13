@@ -32,6 +32,11 @@
     options = "--delete-older-than 7d";
   };
   
+  # Fonts configuration
+  fonts.packages = with pkgs; [
+    nerd-fonts.space-mono
+  ];
+
   # Allow unfree packages (needed for Chrome, VS Code, etc.)
   nixpkgs.config.allowUnfree = true;
 }

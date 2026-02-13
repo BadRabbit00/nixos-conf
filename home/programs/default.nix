@@ -26,6 +26,17 @@
     fastfetch
   ];
 
+  # --- Gemini CLI Configuration ---
+  # Пробрасываем файлы конфигурации gemini-cli
+  xdg.configFile."gemini/settings.json".source = ./gemini/settings.json;
+  xdg.configFile."gemini/trustedFolders.json".source = ./gemini/trustedFolders.json;
+  xdg.configFile."gemini/state.json".source = ./gemini/state.json;
+  xdg.configFile."gemini/GEMINI.md".source = ./gemini/GEMINI.md;
+
+  # ВАЖНО: Секреты (CONTEXT7_API_KEY, GITHUB_TOKEN) должны быть в твоем
+  # системном окружении или управляться через sops-nix / git-crypt.
+  # Я убрала их отсюда, чтобы не слить в репозиторий.
+  
   # --- Btop Configuration ---
   programs.btop = {
     enable = true;
@@ -101,11 +112,12 @@
       "logo": {
         "type": "kitty",
         "source": "~/.config/fastfetch/logo.png",
-        "width": 28,
-        "height": 12,
+        "width": 30,
+        "height": 18,
         "padding": {
           "top": 2,
-          "left": 2
+          "left": 2,
+          "right": 2
         }
       },
       "display": {

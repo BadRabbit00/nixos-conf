@@ -9,6 +9,7 @@
     ../../modules/core/system.nix
     ../../modules/core/program.nix
     ../../modules/core/audio.nix
+    ../../modules/core/nvidia.nix
     ../../modules/hyprland/default.nix
   ];
   

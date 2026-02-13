@@ -4,7 +4,7 @@
   users.users.BadRabbit = {
     isNormalUser = true;
     description = "BadRabbit";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "input" ];
     shell = pkgs.zsh;
     initialPassword = "password";
   };
