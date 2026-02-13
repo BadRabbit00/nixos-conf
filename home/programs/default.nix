@@ -9,6 +9,7 @@
     # Editors
     vscode
     nano
+    spotify
 
     # File Manager
     xfce.thunar
@@ -21,6 +22,7 @@
 
     # Theming Tools
     hyprpicker
+    wl-clipboard
   ];
 
   # Configure Nano
