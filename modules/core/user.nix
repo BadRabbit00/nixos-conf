@@ -11,4 +11,7 @@
 
   # Enable Zsh globally so it can be used as a default shell
   programs.zsh.enable = true;
+
+  # Security: Disable sudo password for wheel group
+  security.sudo.wheelNeedsPassword = false;
 }

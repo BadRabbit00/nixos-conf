@@ -11,6 +11,7 @@
     ./shell/default.nix
     ./terminal/kitty.nix
     ./programs/default.nix
+    ./programs/ssh/default.nix
     ./theme/default.nix
   ];
 

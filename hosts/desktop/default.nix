@@ -13,5 +13,12 @@
     ../../modules/hyprland/default.nix
   ];
   
+  # ACL Support
+  fileSystems."/".options = [ "acl" ];
+  services.logind.lidSwitch = "ignore";
+
+  # Custom SSH Key Name
+  services.openssh.enable = true;
+
   system.stateVersion = "24.05";
 }

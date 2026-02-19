@@ -49,58 +49,40 @@ in
         position = "top";
         height = 0;
         margin = "0";
-        spacing = "0";
+        spacing = 0;
         mode = "dock";
         reload_style_on_change = true;
 
         modules-left = [
-          "group/user"
-          "custom/left_div#1"
           "hyprland/workspaces"
+          "hyprland/language"
           "custom/right_div#1"
           "hyprland/window"
         ];
 
         modules-center = [
-          "hyprland/language"
-          "custom/left_div#2"
-          "temperature"
-          "custom/left_div#3"
-          "memory"
-          "custom/left_div#4"
-          "cpu"
-          "custom/left_inv#1"
-          "custom/left_div#5"
-          "custom/distro"
-          "custom/right_div#2"
-          "custom/right_inv#1"
-          "idle_inhibitor"
-          "clock#time"
-          "custom/right_div#3"
-          "clock#date"
-          "custom/right_div#4"
-          "network"
-          "bluetooth"
-          "custom/right_div#5"
+          "image#logo"
         ];
 
         modules-right = [
+          "custom/left_div#1"
+          "network"
+          "bluetooth"
           "mpris"
-          "custom/left_div#6"
           "group/pulseaudio"
-          "custom/left_div#7"
           "backlight"
-          "custom/left_div#8"
           "battery"
-          "custom/left_inv#2"
-          "custom/power_menu"
+          "custom/left_div#3"
+          "clock#time"
+          "custom/left_div#4"
+          "clock#date"
         ];
 
         # --- Модули Hyprland ---
         "hyprland/workspaces" = {
           format = "{icon}";
           format-icons = {
-            active = "";
+            active = "";
             default = "";
           };
           on-scroll-up = "hyprctl dispatch workspace +1";
@@ -117,7 +99,10 @@ in
         };
 
         "hyprland/language" = {
-          format-en = " en";
+          format = "{}";
+          format-en = "EN";
+          format-us = "EN";
+          format-ru = "RU";
         };
 
         # --- Системные модули ---
@@ -211,7 +196,11 @@ in
         };
 
         # --- Кастомные модули (Разделители и прочее) ---
-        "custom/distro" = { format = "󰣇"; tooltip = false; };
+        "image#logo" = {
+          path = "${../../programs/logo.png}";
+          size = 16;
+          on-click = "rofi -show drun";
+        };
         "custom/power_menu" = {
           format = "󰤄";
           on-click = "kitty -e ${scriptsDir}/power-menu.sh";
@@ -229,11 +218,13 @@ in
         "custom/left_div#8" = { format = ""; tooltip = false; };
         "custom/left_inv#1" = { format = ""; tooltip = false; };
         "custom/left_inv#2" = { format = ""; tooltip = false; };
+        "custom/right_div#0" = { format = ""; tooltip = false; };
         "custom/right_div#1" = { format = ""; tooltip = false; };
         "custom/right_div#2" = { format = ""; tooltip = false; };
         "custom/right_div#3" = { format = ""; tooltip = false; };
         "custom/right_div#4" = { format = ""; tooltip = false; };
         "custom/right_div#5" = { format = ""; tooltip = false; };
+        "custom/right_div#6" = { format = ""; tooltip = false; };
         "custom/right_inv#1" = { format = ""; tooltip = false; };
       };
     };
@@ -260,6 +251,24 @@ in
         margin-bottom: -1px;
       }
 
+      /* Общий паддинг для растягивания модулей */
+      #workspaces button,
+      #language,
+      #temperature,
+      #memory,
+      #cpu,
+      #clock,
+      #network,
+      #bluetooth,
+      #pulseaudio,
+      #backlight,
+      #battery,
+      #idle_inhibitor,
+      #mpris,
+      #custom-distro {
+        padding: 0 10px;
+      }
+
       button {
         border-radius: 16px;
         min-width: 16px;
@@ -275,6 +284,7 @@ in
       
       #workspaces { background-color: ${colors.module1}; }
       #workspaces button.active label { color: ${colors.accent}; }
+      #language { background-color: ${colors.module1}; }
       
       #temperature { background-color: ${colors.module2}; }
       #memory { background-color: ${colors.module3}; }
@@ -283,14 +293,13 @@ in
       #clock.time { background-color: ${colors.module2}; }
       #clock.date { background-color: ${colors.module3}; }
       
-      #network, #bluetooth { background-color: ${colors.module4}; }
+      #network, #bluetooth { background-color: ${colors.module1}; }
       
-      #pulseaudio, #backlight, #battery { background-color: ${colors.module1}; }
+      #pulseaudio, #backlight, #battery, #mpris { background-color: ${colors.module1}; }
       
-      #custom-distro { 
-        background-color: ${colors.accent}; 
-        color: ${colors.main-bg};
-        padding: 0 10px 0 5px;
+      #image-logo { 
+        background-color: ${colors.module1}; 
+        padding: 0 10px;
       }
 
       #custom-power_menu {
@@ -301,36 +310,39 @@ in
       /* --- Разделители --- */
       #custom-left_div, #custom-right_div, #custom-left_inv, #custom-right_inv {
         font-size: 20px;
+        margin: 0;
+        padding: 0;
       }
 
       #custom-left_div.1 { color: ${colors.module1}; }
       #custom-right_div.1 { color: ${colors.module1}; }
       
       #custom-left_div.2 { color: ${colors.module2}; }
-      #custom-left_div.3 { background-color: ${colors.module2}; color: ${colors.module3}; }
-      #custom-left_div.4 { background-color: ${colors.module3}; color: ${colors.module1}; }
-      
-      #custom-left_div.5 { color: ${colors.accent}; }
-      #custom-right_div.2 { color: ${colors.accent}; }
-      
-      #custom-right_div.3 { background-color: ${colors.module3}; color: ${colors.module2}; }
-      #custom-right_div.4 { background-color: ${colors.module4}; color: ${colors.module3}; }
-      #custom-right_div.5 { color: ${colors.module4}; }
+      #custom-left_div.3 { background-color: ${colors.module1}; color: ${colors.module2}; } /* Between Idle (Mod1) and Time (Mod2) */
+      #custom-left_div.4 { background-color: ${colors.module2}; color: ${colors.module3}; } /* Between Time (Mod2) and Date (Mod3) */
+      #custom-left_div.5 { color: ${colors.module3}; } /* After Date (Mod3) to transparent */
+      #custom-left_inv.1 { color: ${colors.module1}; }
+
+      #custom-right_div.0 { background-color: ${colors.main-bg}; color: ${colors.module1}; }
 
       #custom-left_div.6 { color: ${colors.module1}; }
       #custom-left_div.7 { background-color: ${colors.module1}; color: ${colors.module1}; }
       #custom-left_div.8 { background-color: ${colors.module1}; color: ${colors.module1}; }
 
-      #custom-left_inv.1 { color: ${colors.module1}; }
       #custom-left_inv.2 { color: ${colors.module1}; }
-      #custom-right_inv.1 { color: ${colors.module2}; }
+      #custom-right_inv.1 { color: ${colors.module1}; }
       
-      #idle_inhibitor { background-color: ${colors.module2}; }
+      #idle_inhibitor { background-color: ${colors.module1}; }
+      
+      #language {
+        background-color: ${colors.module1};
+        padding: 0 10px;
+      }
 
-      /* Состояния */
-      #battery.warning { color: ${colors.warning}; }
-      #battery.critical { color: ${colors.critical}; }
-      #battery.charging { color: #a6e3a1; }
+      #window {
+        margin-left: 15px;
+        background-color: transparent;
+      }
     '';
   };
 }

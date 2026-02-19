@@ -28,6 +28,10 @@
       enable = true;
       plugins = [ "git" "sudo" "docker" ];
     };
+
+    initExtra = ''
+      fastfetch
+    '';
   };
 
   programs.starship = {

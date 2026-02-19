@@ -9,7 +9,6 @@
     # Editors
     vscode
     nano
-    spotify
 
     # File Manager
     xfce.thunar
@@ -24,6 +23,12 @@
     hyprpicker
     wl-clipboard
     fastfetch
+
+    # Messengers
+    telegram-desktop
+
+    # Misc
+    spotify
   ];
 
   # --- Gemini CLI Configuration ---
@@ -112,10 +117,9 @@
       "logo": {
         "type": "kitty",
         "source": "~/.config/fastfetch/logo.png",
-        "width": 30,
         "height": 18,
         "padding": {
-          "top": 2,
+          "top": 1,
           "left": 2,
           "right": 2
         }
@@ -136,6 +140,11 @@
           "keyColor": "red"
         },
         {
+          "type": "host",
+          "key": "󰌢 Host",
+          "keyColor": "red"
+        },
+        {
           "type": "kernel",
           "key": "󰌢 Kernel",
           "keyColor": "red"
@@ -150,14 +159,10 @@
           "key": "󰏖 Packages",
           "keyColor": "red"
         },
+        "break",
         {
-          "type": "wm",
-          "key": "󱂬 WM",
-          "keyColor": "red"
-        },
-        {
-          "type": "terminal",
-          "key": "󰆍 Terminal",
+          "type": "display",
+          "key": "󰍹 Display",
           "keyColor": "red"
         },
         {
@@ -166,12 +171,47 @@
           "keyColor": "red"
         },
         {
+          "type": "gpu",
+          "key": "󰢮 GPU",
+          "keyColor": "red"
+        },
+        {
           "type": "memory",
           "key": "󰘚 Memory",
           "keyColor": "red"
         },
+        {
+          "type": "disk",
+          "key": "󰋊 Disk",
+          "keyColor": "red"
+        },
+        {
+          "type": "battery",
+          "key": "󰁹 Battery",
+          "keyColor": "red"
+        },
         "break",
-        "colors"
+        {
+          "type": "wm",
+          "key": "󱂬 WM",
+          "keyColor": "red"
+        },
+        {
+          "type": "shell",
+          "key": "󰆍 Shell",
+          "keyColor": "red"
+        },
+        {
+          "type": "terminal",
+          "key": "󰆍 Terminal",
+          "keyColor": "red"
+        },
+        "break",
+        {
+          "type": "localip",
+          "key": "󰩟 IP",
+          "keyColor": "red"
+        }
       ]
     }
   '';
