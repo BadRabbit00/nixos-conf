@@ -30,6 +30,7 @@ in
     libnotify
     networkmanager
     bluez
+    pulseaudio
   ];
 
   # Копируем скрипты в .config/waybar/scripts

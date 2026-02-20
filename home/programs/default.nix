@@ -9,6 +9,7 @@
     # Editors
     vscode
     nano
+    antigravity
 
     # File Manager
     xfce.thunar

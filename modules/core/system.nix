@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 {
-  time.timeZone = "Europe/Moscow";
+  time.timeZone = "Asia/Almaty";
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {

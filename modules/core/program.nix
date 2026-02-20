@@ -7,5 +7,6 @@
     curl
     git
     htop
+    brightnessctl
   ];
 }

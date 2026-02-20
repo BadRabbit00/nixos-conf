@@ -15,10 +15,16 @@
   
   # ACL Support
   fileSystems."/".options = [ "acl" ];
-  services.logind.lidSwitch = "ignore";
+  services.logind.settings.Login.HandleLidSwitch = "hibernate";
 
   # Custom SSH Key Name
   services.openssh.enable = true;
+
+  # Hibernation Support (Swap File)
+  swapDevices = [ {
+    device = "/swapfile";
+    size = 32 * 1024; # 32GB
+  } ];
 
   system.stateVersion = "24.05";
 }
