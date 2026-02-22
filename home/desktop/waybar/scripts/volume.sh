@@ -86,47 +86,32 @@ get_icon() {
 }
 
 set_state() {
-	pactl "set-$DEV_STATE" toggle
-
-	local state icon
-
-	state=$(get_state)
-	icon=$(get_icon)
-
-	notify-send "$DEV_NAME: $state" -i "$icon" \
-		-h string:x-canonical-private-synchronous:volume
+        pactl "set-$DEV_STATE" toggle
 }
 
 set_volume() {
-	local level
-	level=$(get_volume)
+        local level
+        level=$(get_volume)
 
-	local new_level
+        local new_level
 
-	case $ACTION in
-		raise)
-			new_level=$((level + VALUE))
-			if ((new_level > MAX)); then
-				new_level=$MAX
-			fi
-			;;
-		lower)
-			new_level=$((level - VALUE))
-			if ((new_level < MIN)); then
-				new_level=$MIN
-			fi
-			;;
-	esac
+        case $ACTION in
+                raise)
+                        new_level=$((level + VALUE))
+                        if ((new_level > MAX)); then
+                                new_level=$MAX
+                        fi
+                        ;;
+                lower)
+                        new_level=$((level - VALUE))
+                        if ((new_level < MIN)); then
+                                new_level=$MIN
+                        fi
+                        ;;
+        esac
 
-	pactl "set-$DEV_VOLUME" "$new_level%"
-
-	local icon
-	icon=$(get_icon $new_level)
-
-	notify-send "$DEV_NAME: $new_level%" -h int:value:$new_level -i "$icon" \
-		-h string:x-canonical-private-synchronous:volume
+        pactl "set-$DEV_VOLUME" "$new_level%"
 }
-
 main() {
 	DEVICE=$1
 	ACTION=$2

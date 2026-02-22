@@ -51,14 +51,11 @@ main() {
 				down) sign='-' ;;
 			esac
 
-			brightnessctl -n set "${value}%${sign}" > /dev/null
+			                        brightnessctl -n set "${value}%${sign}" > /dev/null
 
-			local level
-			level=$(brightnessctl -m | awk -F ',' '{print $4}')
+			                        ;;
 
-			notify-send "Brightness: $level" -h int:value:"$level" -i \
-				"contrast" -h string:x-canonical-private-synchronous:backlight
-			;;
+			
 		*)
 			usage
 			return 1
