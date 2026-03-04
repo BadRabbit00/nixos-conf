@@ -10,21 +10,29 @@
     ../../modules/core/program.nix
     ../../modules/core/audio.nix
     ../../modules/core/nvidia.nix
+    ../../modules/core/gaming.nix
     ../../modules/hyprland/default.nix
   ];
   
   # ACL Support
   fileSystems."/".options = [ "acl" ];
-  services.logind.settings.Login.HandleLidSwitch = "hibernate";
+  
+  # Windows Mount
+  fileSystems."/mnt/windows" = {
+    device = "/dev/disk/by-uuid/72646C41646C0A65";
+    fsType = "ntfs3";
+    options = [ "ro" "uid=1000" "gid=100" "fmask=0022" "dmask=0022" "nofail" ];
+  };
+
+  services.logind.settings = {
+    Login = {
+      HandleLidSwitch = "poweroff";
+      HandlePowerKey = "suspend";
+    };
+  };
 
   # Custom SSH Key Name
   services.openssh.enable = true;
-
-  # Hibernation Support (Swap File)
-  swapDevices = [ {
-    device = "/swapfile";
-    size = 32 * 1024; # 32GB
-  } ];
 
   system.stateVersion = "24.05";
 }

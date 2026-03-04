@@ -29,7 +29,7 @@
       plugins = [ "git" "sudo" "docker" ];
     };
 
-    initExtra = ''
+    initContent = ''
       fastfetch
     '';
   };

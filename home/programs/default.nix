@@ -12,9 +12,9 @@
     antigravity
 
     # File Manager
-    xfce.thunar
-    xfce.thunar-archive-plugin
-    xfce.thunar-volman
+    thunar
+    thunar-archive-plugin
+    thunar-volman
     
     # System Tray Tools
     networkmanagerapplet # Network icon in tray
@@ -27,9 +27,14 @@
 
     # Messengers
     telegram-desktop
+    discord
+
+    # Media/Recording
+    obs-studio
 
     # Misc
     spotify
+    mangohud
   ];
 
   # --- Gemini CLI Configuration ---
