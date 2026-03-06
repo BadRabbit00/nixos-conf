@@ -14,6 +14,10 @@
     ../../modules/hyprland/default.nix
   ];
   
+  # Legion Pro 5 Touchpad Support
+  boot.kernelModules = [ "i2c-hid-acpi" ];
+  services.libinput.enable = true;
+  
   # ACL Support
   fileSystems."/".options = [ "acl" ];
   
