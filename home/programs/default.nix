@@ -23,6 +23,7 @@
     # Theming Tools
     hyprpicker
     wl-clipboard
+    cliphist
     fastfetch
 
     # Messengers
