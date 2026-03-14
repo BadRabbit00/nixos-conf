@@ -1,6 +1,10 @@
 { pkgs, config, ... }:
 
 {
+  imports = [
+    ./neovim/default.nix
+  ];
+
   home.packages = with pkgs; [
     # Browsers
     firefox
@@ -8,7 +12,6 @@
 
     # Editors
     vscode
-    nano
     antigravity
 
     # File Manager
@@ -225,11 +228,4 @@
 
   # Пробрасываем logo.png в конфиг fastfetch
   xdg.configFile."fastfetch/logo.png".source = ./logo.png;
-
-  # Configure Nano
-  home.file.".nanorc".text = ''
-    set linenumbers
-    set tabsize 2
-    set tabstospaces
-  '';
 }
