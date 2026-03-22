@@ -22,6 +22,7 @@
       ls = "eza --icons";
       cat = "bat";
       grep = "rg";
+      obsidian = "cd ~/vault && git pull && obsidian .";
     };
 
     oh-my-zsh = {

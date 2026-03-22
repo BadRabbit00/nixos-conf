@@ -35,6 +35,7 @@
   # Fonts configuration
   fonts.packages = with pkgs; [
     nerd-fonts.space-mono
+    nerd-fonts.jetbrains-mono
   ];
 
   # Allow unfree packages (needed for Chrome, VS Code, etc.)

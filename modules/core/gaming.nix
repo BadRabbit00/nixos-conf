@@ -24,5 +24,6 @@
     heroic         # Epic/GOG/Amazon launcher
     bottles        # Run Windows software
     vulkan-tools   # vulkaninfo, etc.
+    osu-lazer-bin  # Rhythm game
   ];
 }

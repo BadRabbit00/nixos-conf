@@ -3,6 +3,7 @@
 {
   imports = [
     ./neovim/default.nix
+    ./obsidian/default.nix
   ];
 
   home.packages = with pkgs; [
