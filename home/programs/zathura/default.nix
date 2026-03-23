@@ -55,12 +55,5 @@
       guioptions = "none"; # No scrollbars, no menu
       font = "JetBrainsMono Nerd Font 12";
     };
-    
-    # Format plugins
-    package = pkgs.zathura.withPlugins (p: with p; [
-      zathura_djvu
-      zathura_pdf_mupdf
-      zathura_cb
-    ]);
   };
 }
