@@ -4,6 +4,7 @@
   imports = [
     ./neovim/default.nix
     ./obsidian/default.nix
+    ./zathura/default.nix
   ];
 
   home.packages = with pkgs; [
@@ -36,6 +37,9 @@
 
     # Media/Recording
     obs-studio
+
+    # Document Viewers
+    evince # Standard GTK document viewer for DjVu/PDF
 
     # Misc
     spotify
