@@ -57,10 +57,10 @@
     };
     
     # Format plugins
-    extraPackages = with pkgs; [
+    package = pkgs.zathura.withPlugins (p: with p; [
       zathura_djvu
       zathura_pdf_mupdf
       zathura_cb
-    ];
+    ]);
   };
 }
