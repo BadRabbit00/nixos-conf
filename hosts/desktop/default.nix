@@ -11,6 +11,7 @@
     ../../modules/core/audio.nix
     ../../modules/core/nvidia.nix
     ../../modules/core/gaming.nix
+    ../../modules/core/docker.nix
     ../../modules/hyprland/default.nix
   ];
   

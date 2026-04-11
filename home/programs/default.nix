@@ -38,8 +38,11 @@
     # Media/Recording
     obs-studio
 
-    # Document Viewers
-    evince # Standard GTK document viewer for DjVu/PDF
+    # Document Viewers & Engineering
+    evince
+    typst      # Modern LaTeX alternative
+    tinymist   # LSP for Typst
+    qalculate-gtk # Best calculator for physics/math
 
     # Misc
     spotify

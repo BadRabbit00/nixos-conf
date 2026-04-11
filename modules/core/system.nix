@@ -23,6 +23,9 @@
     # Parallel connections for faster downloads
     max-jobs = "auto";
     cores = 0;
+    # Download optimizations
+    stalled-download-timeout = 90;
+    download-attempts = 10;
   };
 
   # Garbage collection to save disk space
