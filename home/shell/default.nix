@@ -3,12 +3,9 @@
 {
   programs.git = {
     enable = true;
-    settings = {
-      user = {
-        name = "BadRabbit";
-        email = "Alexeyb06@gmail.com";
-      };
-    };
+    userName = "BadRabbit";
+    userEmail = "Alexeyb06@gmail.com";
+    signing.format = null;
   };
 
   programs.zsh = {

@@ -10,6 +10,11 @@
   # Load nvidia driver for Xorg and Wayland
   services.xserver.videoDrivers = ["nvidia"];
 
+  # Fix deprecated option and enable container support
+  hardware.nvidia-container-toolkit.enable = true;
+
+  boot.kernelParams = [ "nvidia-drm.modeset=1" "nvidia_drm.fbdev=1" ];
+
   hardware.nvidia = {
     # Modesetting is required.
     modesetting.enable = true;
