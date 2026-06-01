@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
   time.timeZone = "Asia/Almaty";
@@ -27,12 +27,14 @@
       "https://nix-community.cachix.org"
       "https://hyprland.cachix.org"
       "https://catppuccin.cachix.org"
+      "https://cuda-maintainers.cachix.org"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       "catppuccin.cachix.org-1:noSAt829IPhS9XNoW+uX96t8829FdyxG9WzT7Y9i3u4="
+      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMBZ6nHMZdAYhPbMI1SrxSSTZ6g6hS7E="
     ];
 
     # Parallel connections and timeouts
@@ -41,6 +43,7 @@
     http-connections = 50;
     stalled-download-timeout = 90;
     download-attempts = 10;
+    trusted-users = [ "root" "BadRabbit" "@wheel" ];
   };
 
   # Garbage collection to save disk space
@@ -56,7 +59,26 @@
     nerd-fonts.jetbrains-mono
   ];
 
+  # Legion specific support
+  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
+  environment.systemPackages = with pkgs; [
+    lenovo-legion
+  ];
+
   # Allow unfree packages (needed for Chrome, VS Code, etc.)
   nixpkgs.config.allowUnfree = true;
   environment.sessionVariables.NIXPKGS_ALLOW_UNFREE = "1";
+
+  # zRAM - RAM compression for heavy workloads
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 60;
+    priority = 100;
+  };
+
+  # Udev rules for backlight permissions
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/sh -c 'chgrp video /sys/class/backlight/%k/brightness && chmod g+w /sys/class/backlight/%k/brightness'"
+  '';
 }

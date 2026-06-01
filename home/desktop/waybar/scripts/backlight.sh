@@ -43,19 +43,24 @@ main() {
 	fi
 
 	case $action in
-		up | down)
-			local sign
+	        up | down)
+	                local sign
+	                local device=""
 
-			case $action in
-				up)   sign='+' ;;
-				down) sign='-' ;;
-			esac
+	                # Use intel_backlight if it exists (confirmed to work)
+	                if [[ -d /sys/class/backlight/intel_backlight ]]; then
+	                    device="-d intel_backlight"
+	                elif [[ -d /sys/class/backlight/nvidia_0 ]]; then
+	                    device="-d nvidia_0"
+	                fi
 
-			                        brightnessctl -n set "${value}%${sign}" > /dev/null
+	                case $action in
+	                        up)   sign='+' ;;
+	                        down) sign='-' ;;
+	                esac
 
-			                        ;;
-
-			
+	                brightnessctl $device -n set "${value}%${sign}" > /dev/null
+	                ;;			
 		*)
 			usage
 			return 1

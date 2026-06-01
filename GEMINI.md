@@ -7,7 +7,7 @@ This repository contains a highly modular, aesthetic-driven NixOS configuration 
 The configuration is split into three main layers to ensure modularity and ease of maintenance:
 
 *   **Flake Entry (`flake.nix`)**: The central hub that defines inputs (nixpkgs unstable, home-manager, catppuccin) and outputs the `badrabbitpc` system configuration.
-*   **Host Layer (`hosts/desktop/`)**: Contains system-level NixOS modules specific to the hardware and core OS settings (bootloader, networking, drivers).
+*   **Host Layer (`hosts/desktop/`)**: Contains system-level NixOS modules specific to the hardware and core OS settings (bootloader, networking, drivers, NVIDIA).
 *   **User Layer (`home/`)**: Managed by Home Manager, this directory handles all dotfiles, application settings, and the "Infernal Blood" aesthetic.
 *   **Shared Modules (`modules/`)**: Reusable Nix expressions for system-wide services like `audio.nix`, `nvidia.nix`, and `hyprland/default.nix`.
 

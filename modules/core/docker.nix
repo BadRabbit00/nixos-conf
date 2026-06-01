@@ -3,6 +3,11 @@
 {
   virtualisation.docker = {
     enable = true;
+    daemon.settings = {
+      features = {
+        gpu = true;
+      };
+    };
   };
 
   environment.systemPackages = with pkgs; [
