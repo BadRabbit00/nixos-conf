@@ -210,26 +210,29 @@
         },
         "break",
         {
-          "type": "wm",
-          "key": "󱂬 WM",
+          "type": "custom",
+          "key": "󰌌 ctrl+shift+t",
+          "format": "new_tab",
           "keyColor": "red"
         },
         {
-          "type": "shell",
-          "key": "󰆍 Shell",
+          "type": "custom",
+          "key": "󰌌 ctrl+shift+q",
+          "format": "close_tab",
           "keyColor": "red"
         },
         {
-          "type": "terminal",
-          "key": "󰆍 Terminal",
+          "type": "custom",
+          "key": "󰌌 ctrl+shift+l",
+          "format": "next_tab",
           "keyColor": "red"
         },
-        "break",
         {
-          "type": "localip",
-          "key": "󰩟 IP",
+          "type": "custom",
+          "key": "󰌌 ctrl+shift+h",
+          "format": "previous_tab",
           "keyColor": "red"
-        }
+        },
       ]
     }
   '';

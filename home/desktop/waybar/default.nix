@@ -36,29 +36,34 @@ in
       mainBar = {
         layer = "top";
         position = "top";
-        height = 36;
-        margin-top = 8;
+        height = 30;
+        margin-top = 5;
         margin-left = 10;
         margin-right = 10;
-        spacing = 10;
+        spacing = 8;
 
         modules-left = [
-          "hyprland/workspaces"
+          "niri/workspaces"
         ];
 
-        modules-center = [];
+        modules-center = [
+          "niri/window"
+        ];
 
         modules-right = [
           "group/hardware"
         ];
 
-        "hyprland/workspaces" = {
-          format = "{name}";
-          on-scroll-up = "hyprctl dispatch workspace +1";
-          on-scroll-down = "hyprctl dispatch workspace -1";
-          persistent-workspaces = {
-            "*" = 5;
-          };
+        "niri/workspaces" = {
+          format = "{index}";
+          on-scroll-up = "niri msg action focus-workspace-up";
+          on-scroll-down = "niri msg action focus-workspace-down";
+        };
+
+        "niri/window" = {
+          format = "{}";
+          separate-outputs = true;
+          max-length = 50;
         };
 
         "group/hardware" = {
@@ -128,9 +133,9 @@ in
       * {
         border: none;
         border-radius: 0;
-        font-family: "SpaceMono Nerd Font";
+        font-family: "SpaceMono Nerd Font", "Noto Color Emoji";
         font-weight: bold;
-        font-size: 14px;
+        font-size: 13px;
         min-height: 0;
       }
 
@@ -141,14 +146,14 @@ in
       #workspaces {
         background: ${colors.module-bg};
         margin: 0;
-        padding: 0 5px;
+        padding: 0 4px;
         border-radius: 16px;
       }
 
       #workspaces button {
-        padding: 0 10px;
+        padding: 0 8px;
         color: ${colors.main-fg};
-        margin: 4px 2px;
+        margin: 3px 2px;
         transition: all 0.3s ease;
       }
 
@@ -162,9 +167,17 @@ in
         border-radius: 16px;
       }
 
-      #group-hardware {
+      #window {
         background: ${colors.module-bg};
         padding: 0 15px;
+        border-radius: 16px;
+        color: ${colors.main-fg};
+        margin: 0 5px;
+      }
+
+      #group-hardware {
+        background: ${colors.module-bg};
+        padding: 0 10px;
         border-radius: 16px;
       }
 

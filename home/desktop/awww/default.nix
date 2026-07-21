@@ -2,7 +2,7 @@
 
 {
   home.packages = with pkgs; [
-    swww
+    awww
   ];
 
   home.file.".local/bin/wall.sh" = {
@@ -11,9 +11,9 @@
   };
 
   # Если ты положишь сюда wall.png, он станет твоими обоями по умолчанию
-  xdg.configFile."swww/wall.png" = {
+  xdg.configFile."awww/wall.png" = {
     source = ./wall.png;
   };
 
-  xdg.configFile."swww/templates".source = ./templates;
+  xdg.configFile."awww/templates".source = ./templates;
 }

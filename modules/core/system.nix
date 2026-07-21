@@ -25,14 +25,12 @@
     substituters = [
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
-      "https://hyprland.cachix.org"
       "https://catppuccin.cachix.org"
       "https://cuda-maintainers.cachix.org"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       "catppuccin.cachix.org-1:noSAt829IPhS9XNoW+uX96t8829FdyxG9WzT7Y9i3u4="
       "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMBZ6nHMZdAYhPbMI1SrxSSTZ6g6hS7E="
     ];
@@ -57,6 +55,8 @@
   fonts.packages = with pkgs; [
     nerd-fonts.space-mono
     nerd-fonts.jetbrains-mono
+    noto-fonts-color-emoji
+    noto-fonts-cjk-sans
   ];
 
   # Legion specific support

@@ -1,0 +1,189 @@
+//  _   _ _       _ 
+// | \ | (_)_ __(_)
+// |  \| | | '__| |
+// | |\  | | |  | |
+// |_| \_|_|_|  |_|
+//
+
+prefer-no-csd
+
+input {
+    keyboard {
+        xkb {
+            layout "us,ru"
+            options "grp:win_space_toggle"
+        }
+    }
+
+    touchpad {
+        tap
+        natural-scroll
+        accel-speed 0.2
+        scroll-factor 0.85
+    }
+
+    mouse {
+        accel-speed 0.2
+    }
+
+    warp-mouse-to-focus
+    focus-follows-mouse
+}
+
+output "eDP-1" {
+    scale 1.25
+}
+
+output "HDMI-A-1" {
+    scale 1.25
+}
+
+layout {
+    gaps 10
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+    }
+
+    default-column-width { proportion 0.5; }
+
+    focus-ring {
+        off
+    }
+
+    border {
+        width 2
+        active-color "#d33637"
+        inactive-color "transparent"
+    }
+
+    tab-indicator {
+        position "left"
+        width 4
+        gap 4
+        active-color "#d33637"
+        inactive-color "#351212"
+        hide-when-single-tab false
+    }
+
+    struts {
+        left 0
+        right 0
+        top 0
+        bottom 0
+    }
+}
+
+spawn-at-startup "awww-daemon"
+spawn-at-startup "swaync"
+spawn-at-startup "hyprlock"
+spawn-at-startup "wl-paste" "--type" "text" "--watch" "cliphist" "store"
+spawn-at-startup "wl-paste" "--type" "image" "--watch" "cliphist" "store"
+spawn-at-startup "xwayland-satellite"
+
+// Wait for a bit before running wallpaper script to ensure daemon is up
+spawn-at-startup "sh" "-c" "sleep 1 && ~/.local/bin/wall.sh init"
+
+environment {
+    DISPLAY ":0"
+}
+
+animations {
+    // Niri has nice defaults, but we can tweak if needed
+}
+
+window-rule {
+    geometry-corner-radius 10
+    clip-to-geometry true
+    draw-border-with-background false
+    max-width 2560
+    max-height 1600
+}
+
+binds {
+    // --- BASIC ACTIONS ---
+    Mod+Return { spawn "kitty"; }
+    Mod+Q { close-window; }
+    Mod+E { spawn "thunar"; }
+    Mod+T { spawn "telegram-desktop"; } // Assuming the binary name
+    Mod+Shift+T { toggle-window-floating; }
+    Mod+R { spawn "rofi" "-show" "drun"; }
+    Mod+F { maximize-column; }
+    Mod+Shift+F { fullscreen-window; }
+    Mod+L { spawn "hyprlock"; }
+    Mod+S { spawn "spotify"; }
+    Mod+Shift+S { spawn "sh" "-c" "grim -g \"$(slurp)\" - | wl-copy"; }
+    Mod+V { spawn "sh" "-c" "cliphist list | rofi -dmenu | cliphist decode | wl-copy"; }
+    Mod+B { spawn "google-chrome-stable"; }
+    Mod+H { show-hotkey-overlay; }
+    Mod+Shift+P { spawn "~/.local/bin/wall.sh" "pick"; }
+
+    // --- POWER MANAGEMENT ---
+    Ctrl+Mod+P { spawn "systemctl" "poweroff"; }
+    Ctrl+Mod+S { spawn "systemctl" "suspend"; }
+    Ctrl+Mod+R { spawn "systemctl" "reboot"; }
+
+    // --- NAVIGATION ---
+    Mod+Left  { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Down  { focus-window-down-or-top; }
+    Mod+Up    { focus-window-up-or-bottom; }
+
+    // --- TABS / STACKING ---
+    Mod+W { toggle-column-tabbed-display; }
+    Mod+Ctrl+Left  { consume-window-into-column; }
+    Mod+Ctrl+Right { expel-window-from-column; }
+
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+Down  { move-window-down; }
+    Mod+Shift+Up    { move-window-up; }
+
+    // --- RESIZE ---
+    Ctrl+Alt+Left  { set-column-width "-10%"; }
+    Ctrl+Alt+Right { set-column-width "+10%"; }
+    Ctrl+Alt+Down  { set-window-height "+10%"; }
+    Ctrl+Alt+Up    { set-window-height "-10%"; }
+
+    // --- WORKSPACES ---
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Shift+1 { move-column-to-workspace 1; }
+    Mod+Shift+2 { move-column-to-workspace 2; }
+    Mod+Shift+3 { move-column-to-workspace 3; }
+    Mod+Shift+4 { move-column-to-workspace 4; }
+    Mod+Shift+5 { move-column-to-workspace 5; }
+    Mod+Shift+6 { move-column-to-workspace 6; }
+    Mod+Shift+7 { move-column-to-workspace 7; }
+    Mod+Shift+8 { move-column-to-workspace 8; }
+    Mod+Shift+9 { move-column-to-workspace 9; }
+
+    // --- MEDIA KEYS ---
+    XF86AudioRaiseVolume { spawn "~/.config/waybar/scripts/volume.sh" "output" "raise" "5"; }
+    XF86AudioLowerVolume { spawn "~/.config/waybar/scripts/volume.sh" "output" "lower" "5"; }
+    XF86AudioMute        { spawn "~/.config/waybar/scripts/volume.sh" "output" "mute"; }
+    XF86MonBrightnessUp   { spawn "~/.config/waybar/scripts/backlight.sh" "up" "5"; }
+    XF86MonBrightnessDown { spawn "~/.config/waybar/scripts/backlight.sh" "down" "5"; }
+
+    // Win + F-keys alternatives
+    Mod+F3 { spawn "~/.config/waybar/scripts/volume.sh" "output" "raise" "5"; }
+    Mod+F2 { spawn "~/.config/waybar/scripts/volume.sh" "output" "lower" "5"; }
+    Mod+F1 { spawn "~/.config/waybar/scripts/volume.sh" "output" "mute"; }
+    Mod+F6 { spawn "~/.config/waybar/scripts/backlight.sh" "up" "5"; }
+    Mod+F5 { spawn "~/.config/waybar/scripts/backlight.sh" "down" "5"; }
+
+    // --- ARCHITECT MODE ---
+    Mod+Shift+F23 { spawn "sh" "-c" "logger 'Niri: Copilot key pressed'; ~/.config/waybar/scripts/architect-mode.sh"; }
+    Ctrl+Mod+Shift+F23 { spawn "sh" "-c" "logger 'Niri: Ctrl+Copilot key pressed'; ~/.config/waybar/scripts/architect-mode.sh --gpu"; }
+}

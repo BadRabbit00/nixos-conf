@@ -3,8 +3,15 @@
 {
   programs.git = {
     enable = true;
-    userName = "BadRabbit";
-    userEmail = "Alexeyb06@gmail.com";
+    settings = {
+      user = {
+        name = "BadRabbit";
+        email = "Alexeyb06@gmail.com";
+      };
+      init = {
+        defaultBranch = "main";
+      };
+    };
     signing.format = null;
   };
 

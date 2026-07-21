@@ -2,10 +2,10 @@
 
 {
   imports = [
-    ./hyprland/default.nix
+    ./niri/default.nix
     ./swaync/default.nix
     ./waybar/default.nix
     ./rofi/default.nix
-    ./swww/default.nix
+    ./awww/default.nix
   ];
 }

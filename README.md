@@ -18,7 +18,7 @@ This repository contains a modular NixOS configuration managed with **Flakes** a
 
 ## 🚀 Key Components
 
-*   **WM**: [Hyprland](https://hyprland.org/) (Wayland) with blood-red active borders and custom animations.
+*   **WM**: [Niri](https://github.com/YaLTeR/niri) (Wayland) - A scrollable tiling compositor with a unique horizontal workflow and "Infernal Blood" styling.
 *   **Bar**: [Mechabar](https://github.com/sejjy/mechabar) (Waybar) - Fully integrated with custom scripts and the Blood-Red palette. 
     *   *Original credits to [Jesse Mirabel](https://github.com/sejjy) for the mecha-themed base.*
 *   **Launcher**: [Rofi](https://github.com/davatorium/rofi) with a custom static Blood-Red theme.
@@ -27,11 +27,11 @@ This repository contains a modular NixOS configuration managed with **Flakes** a
 *   **System Monitor**: [Btop](https://github.com/aristocratos/btop) with a custom "Infernal Blood" theme.
 *   **System Info**: [Fastfetch](https://github.com/fastfetch-cli/fastfetch) configured with custom modules and image support (`logo.png`).
 
-## ⌨️ "Vim-Mecha" Navigation
+## ⌨️ "Arrow-Mecha" Navigation
 
-The system uses `SUPER` (Win) as the main modifier and features layout-independent keybindings:
-*   **Vim-Style Focus**: `Win + H/J/K/L`
-*   **Window Resizing**: `Ctrl + Alt + H/J/K/L`
+The system uses `SUPER` (Win) as the main modifier with standard arrow keys:
+*   **Focus**: `Win + Left/Right` (Columns), `Win + Up/Down` (Windows).
+*   **Window Resizing**: `Ctrl + Alt + Arrows`
 *   **Quick Apps**: `Win + Enter` (Kitty), `Win + B` (Browser), `Win + S` (Spotify), `Win + Q` (Close).
 *   **Screenshot**: `Win + Shift + S` (Area selection to clipboard).
 *   **Layout Toggle**: `Win + Space`.

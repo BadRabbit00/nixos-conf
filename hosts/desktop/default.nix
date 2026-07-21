@@ -12,7 +12,7 @@
     ../../modules/core/nvidia.nix
     ../../modules/core/gaming.nix
     ../../modules/core/docker.nix
-    ../../modules/hyprland/default.nix
+    ../../modules/niri/default.nix
   ];
   
   # Legion Pro 5 Touchpad Support
@@ -38,6 +38,16 @@
 
   # Custom SSH Key Name
   services.openssh.enable = true;
+
+  security.pam.services.hyprlock = {};
+
+  nixpkgs.overlays = [
+    (final: prev: {
+      openldap = prev.openldap.overrideAttrs (old: {
+        doCheck = false;
+      });
+    })
+  ];
 
   system.stateVersion = "24.05";
 }
