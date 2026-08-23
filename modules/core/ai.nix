@@ -4,9 +4,10 @@ let
   # Единая CUDA-сборка llama-cpp. Собирается с AVX2 (AVX-512 на i9-14900HX выпилен Intel).
   cudaLlama = pkgs.llama-cpp.override { cudaSupport = true; };
 
-  # Реальная модель под 8GB VRAM. gemma-3n-E4B Q8 (~6.9GB) влезает в видеопамять.
-  # ВНИМАНИЕ: путь ведёт в ~/models-tmp — при желании перенеси модели в постоянное место.
-  gemmaModel = "/home/BadRabbit/models-tmp/gemma-3n-E4B-it-GGUF/gemma-3n-E4B-it-Q8_0.gguf";
+  # Боевое хранилище моделей агента eva. Модели — вне Nix store (они огромные).
+  # gemma-3n-E4B Q8 (~6.9GB) влезает в 8GB VRAM целиком (с -fa для экономии KV-кэша).
+  evaModels = "/home/BadRabbit/.eva/models";
+  gemmaModel = "${evaModels}/gemma-3n-E4B-it-Q8_0.gguf";
 in
 {
   environment.systemPackages = [
@@ -31,10 +32,11 @@ in
       after = [ "network.target" ];
 
       serviceConfig = {
-        # -ngl 999: все слои в VRAM. Для gemma-3n-E4B Q8 на 8GB может потребоваться
-        #           тюнинг (-ngl поменьше / -c поменьше), если упрётся в память.
-        # -t 12   : физические P-cores i9-14900HX.
-        ExecStart = "${cudaLlama}/bin/llama-server -m ${gemmaModel} --host 127.0.0.1 --port 8080 -ngl 999 -c 4096 -t 12";
+        # OpenAI-совместимый эндпоинт для агента eva на 127.0.0.1:8080/v1.
+        #   -ngl 999 : все слои в VRAM.  -fa on : flash-attention (экономит KV-кэш на 8GB).
+        #   --jinja  : chat-шаблон модели (нужен для корректного форматирования/tool-calling).
+        #   -c 4096  : контекст (подними, если хватит VRAM).  -t 12 : P-cores i9-14900HX.
+        ExecStart = "${cudaLlama}/bin/llama-server -m ${gemmaModel} --host 127.0.0.1 --port 8080 -ngl 999 -fa on -c 4096 -t 12 --jinja";
         Restart = "on-failure";
         RestartSec = 5;
         User = "BadRabbit";
