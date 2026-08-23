@@ -3,6 +3,12 @@
 {
   time.timeZone = "Asia/Almaty";
 
+  # Catppuccin: явно фиксируем поведение, чтобы убрать warning о будущем авто-энроле.
+  # autoEnable = false сохраняет текущее состояние (порты не подключаются автоматически),
+  # enable = true — новый глобальный тумблер (без autoEnable ничего не темится).
+  catppuccin.enable = true;
+  catppuccin.autoEnable = false;
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
@@ -35,9 +41,10 @@
       "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMBZ6nHMZdAYhPbMI1SrxSSTZ6g6hS7E="
     ];
 
-    # Parallel connections and timeouts
-    max-jobs = "auto";
-    cores = 0;
+    # Ограничение параллелизма: до 2 пакетов одновременно по 12 ядер на каждый.
+    # Бережём 24 ядра + 32GB от свапа на тяжёлых C++/CUDA-сборках (llama-cpp).
+    max-jobs = 2;
+    cores = 12;
     http-connections = 50;
     stalled-download-timeout = 90;
     download-attempts = 10;
@@ -60,7 +67,7 @@
   ];
 
   # Legion specific support
-  boot.extraModulePackages = [ config.boot.kernelPackages.lenovo-legion-module ];
+  # boot.extraModulePackages для lenovo-legion-module живёт в legion.nix (не дублируем).
   environment.systemPackages = with pkgs; [
     lenovo-legion
   ];

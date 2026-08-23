@@ -27,6 +27,7 @@
       cat = "bat";
       grep = "rg";
       obsidian = "cd ~/vault && git pull && obsidian .";
+      davinci = "davinci-resolve";
     };
 
     oh-my-zsh = {

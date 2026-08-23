@@ -33,7 +33,6 @@
     tuigreet
     xwayland-satellite # For XWayland support in Niri
   ];
-  
-  # Enable OpenGL
-  hardware.graphics.enable = true;
+
+  # hardware.graphics включается в modules/core/nvidia.nix (enable + enable32Bit).
 }

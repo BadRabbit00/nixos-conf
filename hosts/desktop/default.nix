@@ -11,7 +11,10 @@
     ../../modules/core/audio.nix
     ../../modules/core/nvidia.nix
     ../../modules/core/gaming.nix
+    ../../modules/core/legion.nix
     ../../modules/core/docker.nix
+    ../../modules/core/ai.nix
+    ../../modules/core/secrets.nix
     ../../modules/niri/default.nix
   ];
   

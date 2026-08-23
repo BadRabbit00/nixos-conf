@@ -103,6 +103,11 @@ window-rule {
     max-height 1600
 }
 
+window-rule {
+    match app-id="(?i)resolve"
+    open-floating true
+}
+
 binds {
     // --- BASIC ACTIONS ---
     Mod+Return { spawn "kitty"; }

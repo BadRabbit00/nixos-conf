@@ -6,7 +6,7 @@
     grim
     slurp
     wl-clipboard
-    xwayland-satellite
+    # xwayland-satellite ставится системно в modules/niri/default.nix (убран дубль).
     hyprlock
     hypridle
     playerctl

@@ -1,5 +1,38 @@
 { pkgs, config, ... }:
 
+let
+  davinci-resolve-nvidia = pkgs.symlinkJoin {
+    name = "davinci-resolve-nvidia";
+    paths = [ pkgs.davinci-resolve ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/davinci-resolve \
+        --set __NV_PRIME_RENDER_OFFLOAD 1 \
+        --set __NV_PRIME_RENDER_OFFLOAD_PROVIDER NVIDIA-G0 \
+        --set __GLX_VENDOR_LIBRARY_NAME nvidia \
+        --set __VK_LAYER_NV_optimus NVIDIA_only \
+        --set QT_QPA_PLATFORM xcb \
+        --set QT_AUTO_SCREEN_SCALE_FACTOR 0 \
+        --unset QT_STYLE_OVERRIDE \
+        --set QT_QPA_PLATFORMTHEME "" \
+        --set GDK_BACKEND x11
+
+      rm -rf $out/share/applications
+      mkdir -p $out/share/applications
+      if [ -d "${pkgs.davinci-resolve}/share/applications" ]; then
+        cp -rL --no-preserve=mode,ownership ${pkgs.davinci-resolve}/share/applications/* $out/share/applications/
+        for f in $out/share/applications/*.desktop; do
+          if [ -f "$f" ]; then
+            chmod +w "$f"
+            substituteInPlace "$f" \
+              --replace-warn "Exec=davinci-resolve" "Exec=$out/bin/davinci-resolve" \
+              --replace-warn "Exec=${pkgs.davinci-resolve}/bin/davinci-resolve" "Exec=$out/bin/davinci-resolve"
+          fi
+        done
+      fi
+    '';
+  };
+in
 {
   imports = [
     ./neovim/default.nix
@@ -15,6 +48,9 @@
     # Editors
     vscode
     antigravity
+    antigravity-cli
+    claude-code
+    codex        # OpenAI Codex CLI coding agent
 
     # File Manager
     thunar
@@ -37,6 +73,7 @@
 
     # Media/Recording
     obs-studio
+    davinci-resolve-nvidia
 
     # Document Viewers & Engineering
     evince
@@ -46,7 +83,7 @@
 
     # Misc
     spotify
-    mangohud
+    # mangohud — устанавливается системно в modules/core/gaming.nix (убран дубль).
   ];
 
   # --- Gemini CLI Configuration ---
@@ -59,7 +96,13 @@
   # ВАЖНО: Секреты (CONTEXT7_API_KEY, GITHUB_TOKEN) должны быть в твоем
   # системном окружении или управляться через sops-nix / git-crypt.
   # Я убрала их отсюда, чтобы не слить в репозиторий.
-  
+
+  # --- Claude Code Configuration ---
+  # Глобальный system-prompt/персонаж для claude-code (~/.claude/CLAUDE.md),
+  # перенесен из gemini-cli. Живет в отдельном каталоге, а не в xdg.configFile,
+  # т.к. Claude Code хранит user-конфиг в $HOME/.claude, а не $XDG_CONFIG_HOME.
+  home.file.".claude/CLAUDE.md".source = ./claude-code/CLAUDE.md;
+
   # --- Btop Configuration ---
   programs.btop = {
     enable = true;

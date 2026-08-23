@@ -4,7 +4,7 @@
   home.username = "BadRabbit";
   home.homeDirectory = "/home/BadRabbit";
 
-  home.stateVersion = "26.05";
+  home.stateVersion = "24.05";
   home.enableNixpkgsReleaseCheck = false;
 
   gtk.gtk4.theme = config.gtk.theme;

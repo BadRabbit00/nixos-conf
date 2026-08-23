@@ -2,10 +2,6 @@
 
 This repository contains a modular NixOS configuration managed with **Flakes** and **Home Manager**, themed with a deep, infernal palette and a mecha-inspired interface. It is optimized for a high-performance, keyboard-centric workflow.
 
-| ![Waybar Mechabar](./ref/mechabar/assets/catppuccin-mocha.png) |
-| :----------------------------------------------------------: |
-| *Theme: Blood-Red Custom Variant.*                           |
-
 ## 🎨 Aesthetic Profile
 
 *   **Theme**: Infernal Blood (Static Palette).

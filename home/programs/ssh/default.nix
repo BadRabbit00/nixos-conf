@@ -4,11 +4,11 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    matchBlocks = {
+    settings = {
       "github.com" = {
-        hostname = "github.com";
-        identityFile = "~/.ssh/id_github";
-        user = "git";
+        HostName = "github.com";
+        IdentityFile = "~/.ssh/id_github";
+        User = "git";
       };
     };
   };

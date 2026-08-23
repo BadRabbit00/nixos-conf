@@ -18,7 +18,6 @@
     modesetting.enable = true;
 
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
-    # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
     powerManagement.enable = true; # Required for stable CUDA/AI workloads
 
     # Fine-grained power management. Turns off GPU when not in use.
@@ -54,16 +53,16 @@
     "nvidia_drm.fbdev=1" 
     "NVreg_EnableGpuFirmware=1"
     "NVreg_DynamicPowerManagement=0x02"
+    # ВНИМАНИЕ: pci=realloc + pci=nocsr роняли stage-2 udev на ядре 6.18.45
+    # (EIO при перечислении sysfs -> симлинки by-uuid не создавались -> emergency).
+    # pci=nocsr вообще невалидный параметр. Убраны. Оставляем только мягкий ASPM-контроль.
     "pcie_aspm=off"
-    "pci=realloc"
-    "pci=nocsr"
     "pcie_port_pm=off"
     "nvidia.NVreg_EnableBacklightHandler=1"
     "acpi_backlight=native"
   ];
 
-  # Enable Power Profiles Daemon for Fn+Q (Lenovo) support
-  services.power-profiles-daemon.enable = true;
+  # Удалено: power-profiles-daemon больше не нужен для Fn+Q, это берет на себя LenovoLegionLinux
 
   environment.systemPackages = [
     (pkgs.writeShellScriptBin "nvidia-offload" ''

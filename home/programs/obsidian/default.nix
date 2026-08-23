@@ -14,9 +14,11 @@
       
       # Create initial .obsidian directory
       mkdir -p "$VAULT_DIR/.obsidian"
-      
+
       # Basic App Settings (Vim Mode, Spellcheck, etc.)
-      cat <<EOF > "$VAULT_DIR/.obsidian/app.json"
+      # Идемпотентно: только сидируем при отсутствии, чтобы не затирать правки из GUI.
+      if [ ! -f "$VAULT_DIR/.obsidian/app.json" ]; then
+        cat <<EOF > "$VAULT_DIR/.obsidian/app.json"
 {
   "vimMode": true,
   "showLineNumber": true,
@@ -29,9 +31,11 @@
   "newFileFolderPath": "00_Inbox"
 }
 EOF
+      fi
 
       # Appearance Settings
-      cat <<EOF > "$VAULT_DIR/.obsidian/appearance.json"
+      if [ ! -f "$VAULT_DIR/.obsidian/appearance.json" ]; then
+        cat <<EOF > "$VAULT_DIR/.obsidian/appearance.json"
 {
   "accentColor": "#d33637",
   "theme": "obsidian",
@@ -41,9 +45,11 @@ EOF
   "monospaceFontFamily": "JetBrainsMono Nerd Font"
 }
 EOF
+      fi
 
       # Hotkeys (Example: Vim-like)
-      cat <<EOF > "$VAULT_DIR/.obsidian/hotkeys.json"
+      if [ ! -f "$VAULT_DIR/.obsidian/hotkeys.json" ]; then
+        cat <<EOF > "$VAULT_DIR/.obsidian/hotkeys.json"
 {
   "obsidian-vimrc-plugin:toggle-vim-mode": [
     {
@@ -53,6 +59,7 @@ EOF
   ]
 }
 EOF
+      fi
 
       # Initial README for the vault
       if [ ! -f "$VAULT_DIR/README.md" ]; then
