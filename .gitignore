@@ -18,3 +18,17 @@ ref/
 
 # age-ключ sops (НИКОГДА не коммитить)
 .key
+
+# Local analysis, test caches, editor backups and build logs
+graphify-out/
+.graphify-*/
+__pycache__/
+.pytest_cache/
+*.log
+*.swp
+*.swo
+*~
+*.backup
+# Local credentials (encrypted modules/core/secrets/secrets.yaml stays tracked)
+*.agekey
+keys.txt

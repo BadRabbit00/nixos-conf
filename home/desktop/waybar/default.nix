@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, isNixOS ? true, ... }:
 
 let
   colors = {
@@ -13,14 +13,14 @@ let
   scriptsDir = "${config.home.homeDirectory}/.config/waybar/scripts";
 in
 {
-  home.packages = with pkgs; [
-    brightnessctl
+  home.packages = lib.optionals isNixOS [ pkgs.brightnessctl ] ++ (with pkgs; [
     fzf
     libnotify
+  ]) ++ lib.optionals isNixOS (with pkgs; [
     networkmanager
     bluez
     pulseaudio
-  ];
+  ]);
 
   home.file.".config/waybar/scripts" = {
     source = ./scripts;
@@ -31,6 +31,7 @@ in
   programs.waybar = {
     enable = true;
     systemd.enable = true;
+    systemd.targets = lib.mkIf (!isNixOS) [ "niri.service" ];
     
     settings = {
       mainBar = {
@@ -72,8 +73,10 @@ in
             "network"
             "bluetooth"
             "pulseaudio"
-            "backlight"
+          ] ++ lib.optionals isNixOS [
+            "backlight" # NixOS laptop; ARCH-BOX has external monitors.
             "battery"
+          ] ++ [
             "clock#time"
             "clock#date"
           ];
@@ -109,7 +112,7 @@ in
         };
 
         "backlight" = {
-          device = "intel_backlight";
+          device = lib.mkIf isNixOS "intel_backlight";
           format = "{icon} {percent}%";
           format-icons = [ "" "" "" "" "" "" "" "" "" ];
           on-scroll-up = "${scriptsDir}/backlight.sh up";

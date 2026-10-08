@@ -39,7 +39,21 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, catppuccin, ... }@inputs: {
+  outputs = { self, nixpkgs, home-manager, catppuccin, ... }@inputs:
+  let
+    patoolFix = final: prev: {
+      python314Packages = prev.python314Packages.override (old: {
+        overrides = final.lib.composeExtensions (old.overrides or (_: _: {})) (pfinal: pprev: {
+          patool = pprev.patool.overridePythonAttrs (oldAttrs: {
+            doCheck = false;
+          });
+        });
+      });
+    };
+    # HM uses Catppuccin packages directly, not catppuccin.* options.
+    # The NixOS Catppuccin module remains a system-only import.
+    sharedHomeModules = [ inputs.sops-nix.homeManagerModules.sops ];
+  in {
     nixosConfigurations = {
       badrabbitpc = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
@@ -53,24 +67,42 @@
             home-manager.useUserPackages = true;
             # specialArgs выше кормит только NixOS-модули; home-модулям inputs
             # надо передать отдельно, иначе ai-mcp не увидит uv2nix.
-            home-manager.extraSpecialArgs = { inherit inputs; };
+            home-manager.extraSpecialArgs = { isNixOS = true; inherit inputs; };
+            home-manager.sharedModules = sharedHomeModules;
             home-manager.users.BadRabbit = import ./home/default.nix;
             
-            # Наш временный хак для починки patool лежит в том же наборе атрибутов
-            nixpkgs.overlays = [
-              (final: prev: {
-                python314Packages = prev.python314Packages.override (old: {
-                  overrides = final.lib.composeExtensions (old.overrides or (_: _: {})) (pfinal: pprev: {
-                    patool = pprev.patool.overridePythonAttrs (oldAttrs: {
-                      doCheck = false;
-                    });
-                  });
-                });
-              })
-            ];
+            nixpkgs.overlays = [ patoolFix ];
           }
         ];
       };
+    };
+
+    homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
+      pkgs = import nixpkgs {
+        system = "x86_64-linux";
+        overlays = [ patoolFix ];
+        config.allowUnfree = true;
+        config.nvidia.acceptLicense = true;
+      };
+      extraSpecialArgs = {
+        isNixOS = false;
+        inherit inputs;
+        # Optional: absolute STRING pointing to a private age key outside the store.
+        # null leaves Context7 usable without an API key.
+        sopsAgeKeyFile = null;
+      };
+      modules = sharedHomeModules ++ [
+        ./home/default.nix
+        ({ lib, ... }: {
+          home.username = lib.mkForce "badrabbit";
+          home.homeDirectory = lib.mkForce "/home/badrabbit";
+          targets.genericLinux.enable = true;
+          targets.genericLinux.gpu = {
+            enable = true;
+            nvidia = { enable = true; } // builtins.fromJSON (builtins.readFile ./arch/nvidia-driver.json);
+          };
+        })
+      ];
     };
   };
 }

@@ -10,6 +10,8 @@
   gtk.gtk4.theme = config.gtk.theme;
 
   imports = [
+    ./generic-linux.nix
+    ./secrets.nix
     ./desktop/default.nix
     ./shell/default.nix
     ./terminal/kitty.nix

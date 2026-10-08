@@ -8,7 +8,7 @@
 #   context7 — живая документация библиотек. Ключ приезжает из sops в рантайме.
 #   colab    — удалённая песочница: агент пишет и исполняет ячейки в открытом
 #              ноутбуке Colab. Пока только для agy (см. agyFrag ниже).
-{ lib, pkgs, inputs, ... }:
+{ config, lib, pkgs, inputs, isNixOS ? true, ... }:
 
 let
   # В nixpkgs graphify собран голым: сам graphify-mcp есть, а питоновской
@@ -25,7 +25,7 @@ let
     name = "context7-mcp-sops";
     runtimeInputs = [ pkgs.coreutils ];
     text = ''
-      keyfile=/run/secrets/context7_api_key
+      keyfile=${if isNixOS then "/run/secrets/context7_api_key" else lib.escapeShellArg "${config.sops.defaultSymlinkPath}/context7_api_key"}
       if [ -r "$keyfile" ]; then
         CONTEXT7_API_KEY="$(tr -d '\r\n' < "$keyfile")"
         export CONTEXT7_API_KEY
