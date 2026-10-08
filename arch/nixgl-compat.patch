@@ -1,0 +1,21 @@
+diff --git a/nixGL.nix b/nixGL.nix
+--- a/nixGL.nix
++++ b/nixGL.nix
+@@ -99,7 +99,6 @@
+ 
+       nvidiaLibsOnly = nvidiaDrivers.override {
+         libsOnly = true;
+-        kernel = null;
+       };
+ 
+       nixGLNvidiaBumblebee = writeExecutable {
+@@ -266,8 +265,8 @@
+       # Get if from the nvidiaVersionFile
+         let
+           data = builtins.readFile _nvidiaVersionFile;
+-          versionMatch = builtins.match ".*Module  ([0-9.]+)  .*" data;
+-        in if versionMatch != null then builtins.head versionMatch else null;
++          versionMatch = builtins.match ".*Module( for [^ ]+)?  ([0-9.]+)  .*" data;
++        in if versionMatch != null then builtins.elemAt versionMatch 1 else throw "nixGL: load the NVIDIA module on the target host, then rebuild with --impure.";
+ 
+       autoNvidia = nvidiaPackages {version = nvidiaVersionAuto; };

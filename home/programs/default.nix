@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, config, gpuWrap, ... }:
 
 {
   imports = [
@@ -10,12 +10,12 @@
 
   home.packages = with pkgs; [
     # Browsers
-    firefox
-    google-chrome
+    (gpuWrap firefox)
+    (gpuWrap google-chrome)
 
     # Editors
-    vscode
-    antigravity-ide
+    (gpuWrap vscode)
+    (gpuWrap antigravity-ide)
     antigravity-cli
     claude-code
     codex        # OpenAI Codex CLI coding agent
@@ -30,17 +30,17 @@
     pasystray            # Audio icon in tray
 
     # Theming Tools
-    hyprpicker
+    (gpuWrap hyprpicker)
     wl-clipboard
     cliphist
     fastfetch
 
     # Messengers
-    telegram-desktop
-    discord
+    (gpuWrap telegram-desktop)
+    (gpuWrap discord)
 
     # Media/Recording
-    obs-studio
+    (gpuWrap obs-studio)
 
     # Document Viewers & Engineering
     evince
@@ -49,7 +49,7 @@
     qalculate-gtk # Best calculator for physics/math
 
     # Misc
-    spotify
+    (gpuWrap spotify)
     # mangohud — устанавливается системно в modules/core/gaming.nix (убран дубль).
   ];
 

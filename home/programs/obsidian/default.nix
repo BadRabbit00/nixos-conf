@@ -1,8 +1,8 @@
-{ pkgs, config, ... }:
+{ pkgs, config, gpuWrap, ... }:
 
 {
   home.packages = with pkgs; [
-    obsidian
+    (gpuWrap obsidian)
   ];
 
   # Vault structure creation (PARA/Zettelkasten hybrid)

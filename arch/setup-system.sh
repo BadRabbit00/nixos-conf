@@ -49,17 +49,9 @@ packages=(
     udisks2                  # Privileged disk operations for Thunar
     gvfs                     # User mounts and trash support for GTK applications
     fontconfig               # Host font discovery, including HM fontconfig rules
-    bash                     # Portable script interpreter and login shell fallback
-    zsh                      # Optional system login shell with HM's zsh configuration
-    coreutils                # env, timeout, shuf and basic script utilities
     util-linux               # rfkill, logger and runuser
-    procps-ng                # pidof, pkill, watch and ps
-    gawk                     # awk used by Mechabar
-    grep                     # Text filters used by Mechabar
-    sed                      # Text transformations used by Mechabar
-    curl                     # Weather label in hyprlock
     pacman-contrib           # checkupdates used by system-update.sh
-    python                   # Lossless AccountsService update and driver metadata script
+    python                   # Interpreter for the root AccountsService helper
     sudo                     # Explicit system updates from system-update.sh
 )
 
@@ -81,7 +73,6 @@ systemctl enable gdm.service
 
 cat <<'EOF'
 System packages and badrabbit's GDM session are configured.
-As badrabbit, run ./arch/sync-nvidia.sh, then Home Manager (see README).
-After activation, run the exact sudo non-nixos-gpu-setup command printed by HM.
-Reboot after a kernel/NVIDIA update before testing graphics.
+Reboot after a kernel/NVIDIA update so auto-detection sees the loaded driver.
+As badrabbit, run Home Manager with --impure (see README). No further sudo step.
 EOF

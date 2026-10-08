@@ -1,8 +1,9 @@
-{ pkgs, ... }:
+{ pkgs, gpuWrap, ... }:
 
 {
   programs.kitty = {
     enable = true;
+    package = gpuWrap pkgs.kitty;
     font = {
       name = "CommitMono Nerd Font"; # Более четкий и "механический" шрифт
       size = 13;

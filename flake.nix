@@ -7,6 +7,10 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixgl = {
+      url = "github:nix-community/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     catppuccin = {
       url = "github:catppuccin/nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -108,13 +112,14 @@
       };
       modules = sharedHomeModules ++ [
         ./home/default.nix
-        ({ lib, ... }: {
+        ({ lib, pkgs, ... }: {
           home.username = lib.mkForce "badrabbit";
           home.homeDirectory = lib.mkForce "/home/badrabbit";
           targets.genericLinux.enable = true;
-          targets.genericLinux.gpu = {
-            enable = true;
-            nvidia = { enable = true; } // builtins.fromJSON (builtins.readFile ./arch/nvidia-driver.json);
+          targets.genericLinux.nixGL = {
+            packages = import ./arch/nixgl.nix { inherit pkgs; nixgl = inputs.nixgl; };
+            defaultWrapper = "nvidia";
+            vulkan.enable = true;
           };
         })
       ];
