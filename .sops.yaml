@@ -1,0 +1,10 @@
+# Кому дозволено расшифровывать. Публичный ключ — не секрет, его коммитим.
+# Приватный лежит в ./.key (в .gitignore) и в /nix/store не попадает никогда.
+keys:
+  - &badrabbit age1wlr7dh0mxe90puhlw9rfr4md2y79g29hlr4fyv2pmppjvm5ypp8s7sdlgc
+
+creation_rules:
+  - path_regex: modules/core/secrets/.*\.yaml$
+    key_groups:
+      - age:
+          - *badrabbit

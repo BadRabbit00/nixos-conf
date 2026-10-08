@@ -32,13 +32,13 @@
       "https://cache.nixos.org"
       "https://nix-community.cachix.org"
       "https://catppuccin.cachix.org"
-      "https://cuda-maintainers.cachix.org"
+      "https://cache.nixos-cuda.org"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "catppuccin.cachix.org-1:noSAt829IPhS9XNoW+uX96t8829FdyxG9WzT7Y9i3u4="
-      "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMBZ6nHMZdAYhPbMI1SrxSSTZ6g6hS7E="
+      "catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU="
+      "cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M="
     ];
 
     # Ограничение параллелизма: до 2 пакетов одновременно по 12 ядер на каждый.
@@ -58,6 +58,10 @@
     options = "--delete-older-than 7d";
   };
   
+  # Журнал systemd разрастался до ~900 MB без ограничений и молча ел место.
+  # Держим в узде: старое вытесняется, а не копится вечно.
+  services.journald.settings.Journal.SystemMaxUse = "500M";
+
   # Fonts configuration
   fonts.packages = with pkgs; [
     nerd-fonts.space-mono

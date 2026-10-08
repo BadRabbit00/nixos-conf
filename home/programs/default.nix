@@ -1,43 +1,11 @@
 { pkgs, config, ... }:
 
-let
-  davinci-resolve-nvidia = pkgs.symlinkJoin {
-    name = "davinci-resolve-nvidia";
-    paths = [ pkgs.davinci-resolve ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
-    postBuild = ''
-      wrapProgram $out/bin/davinci-resolve \
-        --set __NV_PRIME_RENDER_OFFLOAD 1 \
-        --set __NV_PRIME_RENDER_OFFLOAD_PROVIDER NVIDIA-G0 \
-        --set __GLX_VENDOR_LIBRARY_NAME nvidia \
-        --set __VK_LAYER_NV_optimus NVIDIA_only \
-        --set QT_QPA_PLATFORM xcb \
-        --set QT_AUTO_SCREEN_SCALE_FACTOR 0 \
-        --unset QT_STYLE_OVERRIDE \
-        --set QT_QPA_PLATFORMTHEME "" \
-        --set GDK_BACKEND x11
-
-      rm -rf $out/share/applications
-      mkdir -p $out/share/applications
-      if [ -d "${pkgs.davinci-resolve}/share/applications" ]; then
-        cp -rL --no-preserve=mode,ownership ${pkgs.davinci-resolve}/share/applications/* $out/share/applications/
-        for f in $out/share/applications/*.desktop; do
-          if [ -f "$f" ]; then
-            chmod +w "$f"
-            substituteInPlace "$f" \
-              --replace-warn "Exec=davinci-resolve" "Exec=$out/bin/davinci-resolve" \
-              --replace-warn "Exec=${pkgs.davinci-resolve}/bin/davinci-resolve" "Exec=$out/bin/davinci-resolve"
-          fi
-        done
-      fi
-    '';
-  };
-in
 {
   imports = [
     ./neovim/default.nix
     ./obsidian/default.nix
     ./zathura/default.nix
+    ./ai-mcp/default.nix
   ];
 
   home.packages = with pkgs; [
@@ -47,7 +15,7 @@ in
 
     # Editors
     vscode
-    antigravity
+    antigravity-ide
     antigravity-cli
     claude-code
     codex        # OpenAI Codex CLI coding agent
@@ -73,7 +41,6 @@ in
 
     # Media/Recording
     obs-studio
-    davinci-resolve-nvidia
 
     # Document Viewers & Engineering
     evince

@@ -11,3 +11,10 @@ result-*
 
 # Local reference material (upstream assets, not tracked)
 ref/
+
+#env
+*.env
+.env
+
+# age-ключ sops (НИКОГДА не коммитить)
+.key

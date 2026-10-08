@@ -13,6 +13,7 @@
     ../../modules/core/gaming.nix
     ../../modules/core/legion.nix
     ../../modules/core/docker.nix
+    ../../modules/core/btrfs.nix
     ../../modules/core/ai.nix
     ../../modules/core/secrets.nix
     ../../modules/niri/default.nix
@@ -22,8 +23,17 @@
   boot.kernelModules = [ "i2c-hid-acpi" ];
   services.libinput.enable = true;
   
-  # ACL Support
-  fileSystems."/".options = [ "acl" ];
+  # ACL + btrfs tuning.
+  # compress=zstd:3 — прозрачное сжатие (баланс CPU/степени сжатия). /nix/store и логи
+  # ужимаются особенно хорошо. noatime убирает лишние записи метадаты — бережём SSD.
+  # Списки options склеиваются с subvol=... из hardware-configuration.nix.
+  #
+  # ВАЖНО: сжатие действует только на НОВЫЕ записи. Уже лежащие данные ужать вручную:
+  #   sudo btrfs filesystem defragment -czstd -r /nix /home
+  fileSystems."/".options = [ "acl" "compress=zstd:3" "noatime" ];
+  fileSystems."/nix".options = [ "compress=zstd:3" "noatime" ];
+  fileSystems."/home".options = [ "compress=zstd:3" "noatime" ];
+  fileSystems."/var/log".options = [ "compress=zstd:3" "noatime" ];
   
   # Windows Mount
   fileSystems."/mnt/windows" = {
