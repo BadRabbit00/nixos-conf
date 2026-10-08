@@ -50,6 +50,21 @@
         });
       });
     };
+    # nixpkgs 151fa4e: Tela 2026-07-07 fails noBrokenSymlinks on three
+    # upstream aliases whose targets are missing. Keep all usable icons intact.
+    telaFix = final: prev: {
+      tela-circle-icon-theme = prev.tela-circle-icon-theme.overrideAttrs (old: {
+        postInstall = (old.postInstall or "") + ''
+          for icon in \
+            "$out"/share/icons/*/symbolic/apps/xsi-addon-symbolic.svg \
+            "$out"/share/icons/*/scalable/apps/org.xfce.appfinder.svg; do
+            if [[ -L "$icon" && ! -e "$icon" ]]; then
+              rm "$icon"
+            fi
+          done
+        '';
+      });
+    };
     # HM uses Catppuccin packages directly, not catppuccin.* options.
     # The NixOS Catppuccin module remains a system-only import.
     sharedHomeModules = [ inputs.sops-nix.homeManagerModules.sops ];
@@ -71,7 +86,7 @@
             home-manager.sharedModules = sharedHomeModules;
             home-manager.users.BadRabbit = import ./home/default.nix;
             
-            nixpkgs.overlays = [ patoolFix ];
+            nixpkgs.overlays = [ patoolFix telaFix ];
           }
         ];
       };
@@ -80,7 +95,7 @@
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {
         system = "x86_64-linux";
-        overlays = [ patoolFix ];
+        overlays = [ patoolFix telaFix ];
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
       };
