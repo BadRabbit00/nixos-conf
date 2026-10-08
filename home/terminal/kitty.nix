@@ -98,7 +98,7 @@
     extraConfig = ''
       # Поддержка символов для отрисовки графики (icat)
       allow_remote_control yes
-      listen_on unix:/tmp/kitty
+      listen_on unix:''${XDG_RUNTIME_DIR}/kitty
 
       # Настройка размытия (для Hyprland)
       background_blur 1
