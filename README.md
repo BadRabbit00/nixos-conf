@@ -57,34 +57,113 @@ The system uses `SUPER` (Win) as the main modifier with standard arrow keys:
 
 ## Arch Linux (standalone Home Manager)
 
-Один каталог `home/` используется двумя выходами флейка:
+Один каталог `home/` используется двумя выходами:
 
-| Выход | Пользователь | Домашний каталог | Режим |
-| --- | --- | --- | --- |
-| `nixosConfigurations.badrabbitpc` | `BadRabbit` | `/home/BadRabbit` | HM как модуль NixOS, `isNixOS = true` |
-| `homeConfigurations."badrabbit@ARCH-BOX"` | `badrabbit` | `/home/badrabbit` | standalone HM, `isNixOS = false` |
+| Выход | Пользователь / home | Режим |
+| --- | --- | --- |
+| `nixosConfigurations.badrabbitpc` | `BadRabbit`, `/home/BadRabbit` | HM внутри NixOS, `isNixOS = true` |
+| `homeConfigurations."badrabbit@ARCH-BOX"` | `badrabbit`, `/home/badrabbit` | standalone HM, `isNixOS = false` |
 
-Все различия пользовательских модулей проходят через `isNixOS`. Системные модули
-`hosts/` и `modules/` на Arch не импортируются. На Arch **не запускайте `setup.sh`
-из корня**: он предназначен для переименования NixOS-конфига.
+Различия идут через `isNixOS` и standalone-обёртку во флейке. На Arch **не запускайте
+корневой `setup.sh`**: он переименовывает NixOS-конфиг. Системные NixOS-модули,
+драйверы и специализации на Arch не импортируются.
 
-### Граница между pacman и Home Manager
+### Первая установка и обновления
 
-`arch/setup-system.sh` устанавливает системную часть через pacman: niri и регистрацию
-его сессии для GDM, Xwayland, PAM для hyprlock, hypridle, драйвер NVIDIA, порталы,
-звук, сеть, Bluetooth, polkit, udev-правила и необходимые системные утилиты.
-Скрипт включает NetworkManager и Bluetooth, включает GDM на следующую загрузку
-без перезапуска текущего экрана входа. Он выполняет полный `pacman -Syu --needed`;
-при конфликте пакетов pacman запрашивает решение, частичное обновление не делается.
+Нужны работающий Arch x86_64 с GDM/GNOME, существующий `badrabbit` с home
+`/home/badrabbit`, hostname `ARCH-BOX`, Nix daemon и `nix-command flakes`.
+`nvidia-open` в скрипте рассчитан на стандартное ядро Arch `linux`.
 
-HM устанавливает пользовательские программы (kitty, rofi, браузеры, Waybar,
-swaync, awww, редакторы, CLI), конфиги, скрипты, темы и шрифты. Он создаёт только
-пользовательские службы hypridle и polkit-agent для niri, вызывающие бинарники Arch.
-NetworkManager applet, Thunar и другие D-Bus-клиенты могут быть из Nix, но их
-системные службы предоставляет Arch. Установка пакета в closure Nix сама по себе
-не регистрирует системную службу, PAM или udev-правила.
+Из клона репозитория, принадлежащего `badrabbit`:
 
-Полный явный список pacman (зависимости pacman разрешает дополнительно):
+```sh
+sudo ./arch/setup-system.sh
+# Если обновились ядро/NVIDIA: сначала перезагрузитесь, затем продолжите.
+nix run --inputs-from . home-manager -- switch --impure --flake .#badrabbit@ARCH-BOX -b backup
+```
+
+После Home Manager **никаких sudo-команд не требуется**. Выйдите из сессии и войдите
+снова. GDM выберет niri для `badrabbit`; остальные пользователи сохранят GNOME или
+свой ранее выбранный сеанс. Автологин GDM не включается. Блокировка внутри niri —
+системный hyprlock, запускаемый через hypridle (300 секунд) или `Mod+L`.
+
+Дальнейшие обновления:
+
+```sh
+home-manager switch --impure --flake .#badrabbit@ARCH-BOX
+```
+
+При совпадении `$USER@$(hostname)` с именем выхода можно опустить `#badrabbit@ARCH-BOX`.
+После обновления NVIDIA через pacman порядок обязателен:
+
+```sh
+# Сначала перезагрузка, чтобы загрузился новый модуль ядра, затем:
+home-manager switch --impure --flake .#badrabbit@ARCH-BOX
+```
+
+Собирать Arch-окружение нужно на целевой NVIDIA-машине: GPU-обёртка определяется
+по **загруженному модулю**, а не по версии пакета в pacman. Копирование готовой
+generation с компьютера с другой версией драйвера для установки не подходит.
+
+### GPU через nixGL
+
+Все пользовательские программы остаются из Nix. Общий хелпер `gpuWrap` вызывает
+`config.lib.nixGL.wrap` только на Arch и возвращает исходный пакет на NixOS.
+Используется штатная интеграция HM `targets.genericLinux.nixGL`, wrapper `nvidia`,
+с поддержкой OpenGL/EGL и Vulkan. Обёртка задаёт пути библиотек и NVIDIA JSON только
+в окружении запускаемого процесса и его потомков. Глобальные переменные GPU,
+файлы драйвера в системных каталогах и системные службы для этого не создаются.
+
+Обёрнутые программы:
+
+| Пакеты | Причина |
+| --- | --- |
+| kitty | OpenGL-рендер терминала |
+| firefox, google-chrome | GPU-композитинг браузера |
+| vscode, antigravity-ide, discord, obsidian, spotify | Chromium/Electron и GPU-рендер |
+| telegram-desktop | Qt/OpenGL |
+| obs-studio | OpenGL-композитинг сцен |
+| hyprpicker | Единый запуск графического инструмента через GPU-хелпер |
+| swaynotificationcenter (swaync) | В закреплённой версии уже GTK4 с GPU-рендерером |
+
+Thunar, Evince, Zathura, Qalculate, Waybar, rofi, nm-applet и pasystray используют
+GTK3/Cairo и оставлены без GPU-обёрток. Awww 0.12.1 использует `wl_shm`, а не EGL;
+ему обёртка не нужна. Аналогично не оборачиваются swaybg, grim, slurp и CLI.
+Niri, Xwayland, hyprlock и hypridle используют системные бинарники Arch.
+
+HM сохраняет `.desktop`-файлы и перенаправляет абсолютные ссылки на обёрнутый пакет.
+Записи с `Exec=kitty`, `Exec=firefox` и другими именами находят обёртки через PATH.
+Это распространяется на rofi, файловые ассоциации и бинды niri. Для Telegram HM
+также переписывает D-Bus activation entry.
+
+NixGL читает `/proc/driver/nvidia/version` через локальную derivation с
+`builtins.currentTime`: поэтому сборке/активации нужен `--impure` и доступ к сети
+при первом скачивании подходящих библиотек NVIDIA. Версия определяется автоматически.
+Никакой NVIDIA `.run`-установщик в системе не запускается.
+
+Закреплённый nixGL `b610529` требует небольшого адаптера `arch/nixgl.nix`:
+`nixgl-compat.patch` добавляет распознавание строки `Module for x86_64` у nvidia-open
+и убирает удалённый из nixpkgs аргумент `kernel`. Адаптер использует тот же `pkgs`,
+что HM (включая unfree/license), корректирует имя Vulkan ICD и направляет EGL
+external-platform lookup на Nix-библиотеки Wayland/GBM/X11 внутри процесса.
+При обновлении nixGL/nixpkgs эти совместимые правки нужно перепроверить.
+См. [интеграцию HM](https://github.com/nix-community/home-manager/blob/fae6e9e42c3b762ab47635cddcfaf6f52374a61b/docs/manual/usage/gpu-non-nixos.md)
+и [исходник nixGL](https://github.com/nix-community/nixGL/blob/b6105297e6f0cd041670c3e8628394d4ee247ed5/nixGL.nix).
+
+### Изоляция от других пользователей
+
+Системная часть — существующие общие пакеты Arch и файл
+`/var/lib/AccountsService/users/badrabbit`. Установщик изменяет в нём только
+`Session`, `SessionType`, `SystemAccount`, сохраняет остальные ключи/комментарии
+и перезапускает accounts-daemon. Сессию он берёт из имени
+`/usr/share/wayland-sessions/niri.desktop`. Файлы других пользователей не трогает.
+
+Скрипт выполняет `pacman -Syu --needed`, включает общие NetworkManager, Bluetooth
+и GDM (без перезапуска GDM). Собственных настроек в `/etc/profile.d`,
+`/etc/environment`, EGL/Vulkan, tmpfiles, GDM или dconf он не записывает.
+Штатные файлы пакетов и включение трёх общих служб относятся к системной установке.
+Новых пакетов относительно прежнего установщика не добавлено; из списка убраны
+лишние пользовательские CLI и zsh. Оставшийся явный список:
 
 ```text
 niri xwayland-satellite hyprlock hypridle
@@ -94,192 +173,111 @@ nvidia-open nvidia-utils egl-wayland egl-gbm egl-x11 vulkan-icd-loader
 networkmanager bluez bluez-utils brightnessctl
 pipewire pipewire-pulse wireplumber libpulse
 polkit polkit-gnome gnome-keyring udisks2 gvfs fontconfig
-bash zsh coreutils util-linux procps-ng gawk grep sed curl pacman-contrib python sudo
+util-linux pacman-contrib python sudo
 ```
 
-Назначение каждого пакета также указано рядом с ним в `arch/setup-system.sh`.
-`nmcli` приходит из networkmanager, `bluetoothctl` — из bluez-utils, `wpctl` — из
-wireplumber, `pactl` — из libpulse, `rfkill`/`logger` — из util-linux,
-`pidof`/`pkill`/`watch` — из procps-ng, `checkupdates` — из pacman-contrib.
+Python нужен root-helper для безопасного обновления AccountsService; util-linux,
+sudo и pacman-contrib обслуживают системные операции. Программы, оболочка zsh,
+CLI, темы и шрифты пользователя устанавливаются Home Manager. Смена login shell
+не автоматизирована; если системный zsh уже установлен, `chsh -s /usr/bin/zsh`
+можно выполнить **от имени badrabbit**, не для других аккаунтов.
 
-### Первая установка
+Waybar, swaync, hypridle, polkit-agent, nm-applet, pasystray и опциональный sops-nix
+имеют `WantedBy`, `PartOf`, `Requisite` только для `niri.service`. Лишняя привязка
+Waybar к `tray.target` удалена на Arch. XDG-autostart tray-программ перекрыт
+пользовательскими `Hidden=true` entries; swaync D-Bus activation направлен в
+ограниченную службу. Awww и два wl-paste/cliphist watcher запускаются только
+`spawn-at-startup` из KDL и живут в cgroup сессии niri. При входе самого `badrabbit`
+в GNOME эти фоновые компоненты тоже не должны запускаться.
 
-Предполагается уже работающий Arch x86_64 с GDM/GNOME, пользователем `badrabbit`,
-hostname `ARCH-BOX`, Nix daemon и включёнными `nix-command flakes`. Скрипт не
-создаёт пользователей, не меняет hostname, разметку btrfs или настройки Nix.
-Пакет `nvidia-open` рассчитан на стандартное ядро Arch `linux`; при другом ядре
-нужно сначала согласовать пакет модулей NVIDIA с ядром.
+HM пишет в home только `badrabbit`. В niri и его службах `TMPDIR` направлен в
+`$XDG_RUNTIME_DIR`; каталог создаётся logind для своего UID с правами 0700.
+Сокет kitty на обеих платформах находится в `$XDG_RUNTIME_DIR/kitty-PID`: kitty
+раскрывает переменную и добавляет PID. Внутри kitty достаточно `kitten @ ls`;
+явное обращение — `kitten @ --to "$KITTY_LISTEN_ON" ls`.
+См. [документацию listen_on](https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.listen_on).
 
-Из клона репозитория, принадлежащего `badrabbit`:
+`PATH` содержит `~/.local/bin`, `~/.nix-profile/bin` и
+`/nix/var/nix/profiles/default/bin`. HM genericLinux экспортирует профильный `share`
+в `XDG_DATA_DIRS`; drop-in niri сохраняет эти пути после импорта окружения GDM.
+Fontconfig видит CommitMono/SpaceMono/JetBrainsMono Nerd Fonts и Noto из профиля Nix.
 
-```sh
-sudo ./arch/setup-system.sh
-./arch/sync-nvidia.sh
-nix run home-manager/master -- switch --flake .#badrabbit@ARCH-BOX -b backup
-sudo "$(readlink -f "$HOME/.nix-profile/bin/non-nixos-gpu-setup")"
-```
-
-`sync-nvidia.sh` выполняется **без sudo**, читает `pacman -Q nvidia-utils`, скачивает
-официальный `.run`-архив NVIDIA только для вычисления hash и обновляет
-отслеживаемый `arch/nvidia-driver.json`. Он не запускает установщик NVIDIA.
-Первоначальный pin — `615.71.09` из закреплённого nixpkgs; до первой активации
-обязательно синхронизируйте его с установленным драйвером ARCH-BOX.
-
-Команда с `home-manager/master` приведена для bootstrap; сам конфиг использует
-HM из `flake.lock`. Для bootstrap CLI той же закреплённой версии можно использовать:
-
-```sh
-nix run --inputs-from . home-manager -- switch --flake .#badrabbit@ARCH-BOX -b backup
-```
-
-После установки выйдите из всех сессий `badrabbit` и войдите заново; после обновления
-ядра или NVIDIA перезагрузитесь. При необходимости смените login shell только
-своего пользователя: `chsh -s /usr/bin/zsh`.
-
-GDM получает сессию из `/usr/share/wayland-sessions/niri.desktop`.
-Установщик меняет только `Session=niri`, `SessionType=wayland`,
-`SystemAccount=false` в секции `[User]` файла
-`/var/lib/AccountsService/users/badrabbit`, сохраняя остальные ключи и комментарии,
-после чего перезапускает `accounts-daemon`. Повторный запуск безопасен.
-Файлы остальных пользователей и глобальная сессия GDM не меняются; существующий
-GNOME остаётся их сессией. Если другой пользователь ранее сам выбирал иную сессию,
-его сохранённый выбор тоже остаётся прежним.
-
-GDM проверяет пароль при входе. В niri на Arch нет дополнительного hyprlock при
-старте; блокировка запускается `Mod+L`, через loginctl или hypridle спустя 300 секунд,
-экран выключается спустя 330 секунд. На NixOS остаётся исходная цепочка greetd и
-hyprlock при старте.
-
-### Обновления и NVIDIA
-
-Обычное обновление пользовательского окружения:
-
-```sh
-home-manager switch --flake .#badrabbit@ARCH-BOX
-```
-
-При совпадении `$USER@$(hostname)` с `badrabbit@ARCH-BOX` достаточно
-`home-manager switch --flake .`. В новой сессии CLI доступен из `~/.nix-profile/bin`.
-
-Закреплённый HM поддерживает `targets.genericLinux.gpu.nvidia`: он собирает
-совместимые с nixpkgs пользовательские библиотеки драйвера. `nvidia-open` обозначает
-открытый **модуль ядра**; ему всё равно нужны пользовательские NVIDIA-библиотеки
-из `nvidia-utils`. Версия библиотек в Nix должна точно совпадать с версией драйвера
-хоста; версия пакета Arch без epoch и `-pkgrel` — нужная upstream-версия.
-См. [документацию Home Manager по GPU](https://github.com/nix-community/home-manager/blob/fae6e9e42c3b762ab47635cddcfaf6f52374a61b/docs/manual/usage/gpu-non-nixos.md).
-
-После каждого обновления `nvidia-open`/`nvidia-utils` через pacman:
-
-```sh
-pacman -Q nvidia-open nvidia-utils
-./arch/sync-nvidia.sh
-home-manager switch --flake .#badrabbit@ARCH-BOX
-sudo "$(readlink -f "$HOME/.nix-profile/bin/non-nixos-gpu-setup")"
-./arch/sync-nvidia.sh --check
-# Перезагрузитесь, чтобы ядро загрузило новую версию модуля NVIDIA.
-```
-
-Сохраните изменение `arch/nvidia-driver.json` отдельным коммитом. Обновление только
-`flake.lock` не синхронизирует этот pin. При необходимости hash можно получить
-вручную через `nix store prefetch-file` для URL, используемого скриптом.
-
-HM при активации лишь печатает предупреждение и точную команду с sudo, если GPU
-библиотеки требуют установки/обновления. Root запускается отдельно: upstream-скрипт
-создаёт `/etc/tmpfiles.d/non-nixos-gpu.conf`, GC root и `/run/opengl-driver`, а для
-NVIDIA также ссылки EGL в `/etc/egl/egl_external_platform.d/`. Tmpfiles восстанавливает
-их после перезагрузки. Это системная операция, её нельзя выполнить автоматически
-из активации HM. Не запускайте этот helper на NixOS: там `/run/opengl-driver`
-принадлежит NixOS. Используется штатная GPU-интеграция HM, обёртки nixGL не нужны.
-
-### Окружение, секреты и ограничения
-
-`home/generic-linux.nix` добавляет `~/.local/bin`, `~/.nix-profile/bin` и
-`/nix/var/nix/profiles/default/bin` в окружение shell и `environment.d`.
-`targets.genericLinux` сам добавляет профильные `share`-каталоги в `XDG_DATA_DIRS`,
-в том числе для systemd user. Дополнительный drop-in для системного `niri.service`
-фиксирует PATH и XDG_DATA_DIRS: `niri-session` импортирует окружение GDM и может
-перезаписать значения user manager. Сессионные бинды поэтому не зависят от запуска
-терминала. Niri/Xwayland используют системные бинарники, Xwayland на Arch запускается
-по требованию без принудительного `DISPLAY=:0`.
-
-На Arch включён `fonts.fontconfig.enable`, установлены CommitMono, SpaceMono,
-JetBrainsMono Nerd Fonts, Noto Emoji и CJK. Catppuccin в `home/` используется как
-пакеты GTK/Kvantum, опций `catppuccin.*` там нет: HM-модуль Catppuccin не требуется.
-Системный Catppuccin на NixOS сохранён. Оба выхода получают HM-модуль sops из одного
-списка `sharedHomeModules`; NixOS по-прежнему расшифровывает системные секреты.
-
-На Arch Context7 по умолчанию работает без API-ключа, с ограничением запросов.
-Для sops перенесите age-ключ защищённым способом за пределы репозитория, задайте
-права `0600` и в standalone `extraSpecialArgs` укажите, например:
+Секреты в store не помещаются: Gemini JSON содержит только настройки/состояние,
+SSH-конфиг ссылается на `~/.ssh/id_github`, Context7 читает ключ при запуске.
+Для опционального sops задайте в standalone `extraSpecialArgs` **строку**:
 
 ```nix
 sopsAgeKeyFile = "/home/badrabbit/.config/sops/age/keys.txt";
 ```
 
-Это должна быть **строка**, не Nix path literal: содержимое приватного ключа не
-должно попасть в store. Ключ должен расшифровывать существующий encrypted YAML;
-при новом age-ключе сначала добавьте получателя и перешифруйте секреты. HM запустит
-пользовательский `sops-nix.service`; Context7 прочитает секрет через
-`~/.config/sops-nix/secrets/context7_api_key`. Проверяйте службу командой
-`systemctl --user status sops-nix`, не печатая секрет. SSH продолжает использовать
-`~/.ssh/id_github`: этот приватный ключ переносится отдельно.
+Сам age-ключ хранится вне Git с правами 0600 и должен расшифровывать существующий
+encrypted YAML. Sops расшифровывает его пользовательской службой в niri; Context7
+читает `~/.config/sops-nix/secrets/context7_api_key`. Без ключа Context7 работает
+с ограничением запросов. Не помещайте credentials в `.text`/`.source` или Nix path
+literal. В NixOS остаётся прежний системный sops.
 
-Ограничения, зависящие от машины:
+### Очистка после прежней GPU-настройки
 
-- На ARCH-BOX скрыты laptop-модули battery/backlight в Waybar. `brightnessctl`
-  работает только с устройствами в `/sys/class/backlight`; яркость внешнего
-  монитора через DDC/CI здесь не настраивается. Масштаб выходов задаётся общим KDL;
-  для другого имени/размера монитора может понадобиться отдельное правило.
-- Hibernate из меню требует настроенных swap/resume на Arch; скрипт этого не делает.
-- NixOS-специфичные Docker, Steam, llama-server/CUDA и специализации не переносятся
-  этим пользовательским выходом. `system-update.sh` обновляет pacman/AUR при наличии
-  helper; Home Manager и GPU pin после него обновляются отдельно.
-- GTK/Qt-приложения из Nix и Arch могут различаться версиями плагинов. Монтирование
-  дисков через Thunar/GVfs, portals/screencast и блокировку PAM нужно проверить в
-  живой сессии. GDM не запускает конфиги HM для других пользователей.
-- Оверлей patool применяется к обоим выходам. Отдельный общий фикс Tela удаляет
-  только битые upstream-ссылки, из-за которых версия `2026-07-07` не собиралась;
-  рабочие иконки и настройки темы сохранены.
+**Только на Arch, если раньше запускали `non-nixos-gpu-setup`.** На NixOS эти
+команды выполнять нельзя. Сначала перейдите на текущую HM generation, затем удалите
+остатки прежнего `targets.genericLinux.gpu`:
 
-### Проверка
+```sh
+sudo rm -f /etc/tmpfiles.d/non-nixos-gpu.conf
+sudo sh -c 'rm -f /etc/egl/egl_external_platform.d/*_nix_gpu.json'
+sudo rm -f /run/opengl-driver
+sudo rm -f /nix/var/nix/gcroots/non-nixos-gpu.conf
+```
 
-Без применения конфигурации:
+Последний путь — точный GC root из setup-скрипта закреплённого HM при стандартном
+Nix state directory `/nix/var/nix`. Ссылки на остальные EGL JSON не удаляются.
+Запуск через `sh` позволяет очистке работать и из zsh, когда glob уже пуст.
+Это разовая миграция старой установки, а не шаг установки/обновления нового HM.
+
+### Ограничения и проверка
+
+- **CUDA из Nix на Arch не гарантируется**, её настройка — отдельная задача.
+- nixGL меняет окружение процесса и его дочерних процессов. Запуск приложений Arch
+  из обёрнутого терминала/IDE может выявить несовместимость библиотек; другие UID
+  не наследуют это окружение. EGL/Vulkan и аппаратное декодирование проверяются
+  на целевом драйвере, успешная сборка их не подтверждает.
+- Hibernate требует отдельной настройки swap/resume. Яркость внешних мониторов
+  через DDC/CI не настраивается, battery/backlight скрыты на ARCH-BOX.
+- Пользовательские настройки HM действуют для `badrabbit`; изоляция автозапуска
+  не означает отдельный домашний каталог для его GNOME и niri.
+
+Проверки без активации:
 
 ```sh
 nix flake check
-nix build .#homeConfigurations.\"badrabbit@ARCH-BOX\".activationPackage
+nix build --impure '.#homeConfigurations."badrabbit@ARCH-BOX".activationPackage' --out-link result-arch
+python3 arch/tests/check-generation.py result-arch
 nixos-rebuild build --flake .#badrabbitpc
 python3 -m unittest discover -s arch/tests -v
-shellcheck arch/setup-system.sh arch/sync-nvidia.sh
+shellcheck arch/setup-system.sh
 ```
 
-На живой ARCH-BOX после активации и нового входа:
+`nix flake check` проходит в pure-режиме, но не строит произвольный
+`homeConfigurations` output. Сборка/eval Arch activationPackage без `--impure`
+невозможна с автоопределением NVIDIA и выдаёт явное сообщение. NixOS по-прежнему
+собирается в pure-режиме; nixGL не участвует в его пакетах.
 
-1. В GDM выберите `badrabbit`: должен открыться niri без ручного выбора сессии.
-   Проверьте отдельный вход другого пользователя в GNOME.
-2. Запустите kitty, rofi и браузер биндами, проверьте сетевое/Bluetooth/звуковое меню
-   Waybar. `systemctl --user status niri waybar hypridle niri-polkit-agent` должен
-   показывать работающие службы; ошибки смотрите через `journalctl --user -b`.
-3. Проверьте окружение именно запуска из niri и наличие Nix desktop entries:
-   ```sh
-   niri msg action spawn -- sh -c 'env > "$HOME/.cache/niri-env.txt"'
-   grep -E '^(PATH|XDG_DATA_DIRS)=' ~/.cache/niri-env.txt
-   systemctl --user show-environment | grep -E '^(PATH|XDG_DATA_DIRS)='
-   ls ~/.nix-profile/share/applications
-   ```
-4. `nvidia-smi` должен видеть RTX 5080; `./arch/sync-nvidia.sh --check` должен
-   подтвердить версию. Проверьте `readlink /run/opengl-driver` и запуск
-   `~/.nix-profile/bin/kitty --debug-rendering` без ошибок EGL/OpenGL.
-5. `loginctl lock-session` и ожидание idle должны запускать `/usr/bin/hyprlock`,
-   который принимает пароль. Проверьте также suspend/resume.
-6. `fc-match 'CommitMono Nerd Font'` и `fc-match 'SpaceMono Nerd Font'` должны находить
-   установленные шрифты. Проверьте иконки в kitty и Waybar визуально.
-7. Проверьте file chooser/демонстрацию экрана в браузере и
-   `systemctl --user status xdg-desktop-portal xdg-desktop-portal-gnome pipewire wireplumber`.
-   Если в существующем профиле звук был отключён, включите **от имени badrabbit**:
-   `systemctl --user enable --now pipewire.socket pipewire-pulse.socket wireplumber.service`.
+Ручная проверка на ARCH-BOX:
 
-Сборка на NixOS не подтверждает работу GPU, GDM, PAM, устройств или PATH живой
-Arch-сессии; перечисленные проверки выполняются на целевой машине.
+1. В GDM войдите как `badrabbit`: должна открыться niri без ручного выбора.
+   Запустите kitty, Firefox, Chrome, VS Code из rofi и биндов; `nvidia-smi`
+   должен видеть RTX 5080 и GPU-процессы. Проверьте Waybar, звук, Bluetooth,
+   portals/screencast, шрифты и принятие пароля hyprlock.
+2. Проверьте `systemctl --user status waybar swaync hypridle niri-polkit-agent nm-applet pasystray`.
+   Для окружения бинда: `niri msg action spawn -- sh -c 'env > "$XDG_RUNTIME_DIR/niri-env"'`,
+   затем `grep -E '^(PATH|XDG_DATA_DIRS|TMPDIR)=' "$XDG_RUNTIME_DIR/niri-env"`.
+3. Внутри kitty выполните `kitten @ ls`, `echo "$KITTY_LISTEN_ON"` и
+   `stat -c '%a %U' "$XDG_RUNTIME_DIR"`: сокет должен быть в личном runtime-каталоге.
+4. Войдите другим пользователем в GNOME: `ps -u "$USER" -o comm=` не должен показывать
+   наши фоновые компоненты. Проверьте отсутствие старых общесистемных GPU-файлов,
+   перечисленных в разделе очистки. Повторите вход в GNOME самим `badrabbit` и
+   убедитесь, что niri-службы неактивны.
+5. После обновления драйвера перезагрузитесь и повторите HM switch с `--impure`.
+   Настройки и автозапуск других пользователей не меняются; сам драйвер Arch общий.
 
 *Forged in blood and code for the Architect.* 🧛‍♀️🩸
