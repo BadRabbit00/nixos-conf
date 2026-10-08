@@ -1,6 +1,7 @@
 { pkgs, lib, isNixOS ? true, ... }:
 
 {
+  imports = [ ./session.nix ];
   home.packages = with pkgs; [
     swaybg
     grim
@@ -17,10 +18,12 @@
     # second satellite manually. All other bindings come from the same file.
     text = lib.replaceStrings
       [ ''spawn-at-startup "hyprlock"''
+        ''spawn-at-startup "swaync"''
         ''spawn-at-startup "xwayland-satellite"''
         ''    DISPLAY ":0"''
         ''spawn "hyprlock"'' ]
       [ "// GDM handles authentication at login."
+        "// swaync is bound to niri.service, including D-Bus activation."
         "// niri starts the system xwayland-satellite on demand."
         ""
         ''spawn "/usr/bin/hyprlock"'' ]
