@@ -62,6 +62,21 @@
   # Держим в узде: старое вытесняется, а не копится вечно.
   services.journald.settings.Journal.SystemMaxUse = "500M";
 
+  # /tmp чистится ТОЛЬКО при загрузке, и остаётся на диске (btrfs-субволюм).
+  #
+  # Почему не tmpfs: у nix-daemon нет TMPDIR, значит Nix распаковывает и
+  # собирает всё в /tmp. Дерево сборки CUDA-llama-cpp/LLVM при max-jobs=2 ×
+  # cores=12 — это гигабайты; в tmpfs они лежали бы в RAM, переливались в
+  # zram и душили сам компилятор. На диске есть десятки GiB и уже включён
+  # compress=zstd:3. Горячие мелкие файлы и так живут в $XDG_RUNTIME_DIR.
+  #
+  # Почему cleanOnBoot, а не age-правило: systemd-tmpfiles удаляет запись
+  # лишь когда atime, mtime и ctime ВСЕ старше порога. Любой сквозной обход
+  # каталога поднимает atime всему /tmp разом, и штатное `q /tmp ... 10d`
+  # перестаёт срабатывать — так тут и накопилось 14 GiB из 3583 каталогов,
+  # часть с марта. `D!` при загрузке сносит их безусловно, не глядя на время.
+  boot.tmp.cleanOnBoot = true;
+
   # Fonts configuration
   fonts.packages = with pkgs; [
     nerd-fonts.space-mono
