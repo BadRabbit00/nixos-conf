@@ -6,6 +6,7 @@
     ./obsidian/default.nix
     ./zathura/default.nix
     ./ai-mcp/default.nix
+    ./ai-skills/default.nix
   ];
 
   home.packages = with pkgs; [
