@@ -30,12 +30,9 @@
     })
   ];
 
-  # ⚙️ Правила udev для доступа юзера
-  services.udev.extraRules = ''
-    SUBSYSTEM=="platform", DRIVER=="legion", RUN+="${pkgs.coreutils}/bin/chmod -R a+rw /sys/module/legion_laptop/drivers/platform:legion/"
-    SUBSYSTEM=="platform", DRIVER=="ideapad_acpi", RUN+="${pkgs.coreutils}/bin/chmod -R a+rw /sys/bus/platform/drivers/ideapad_acpi/"
-  '';
-
+  # ⚠️ Никаких chmod на /sys/bus/platform/drivers/*: uevent драйвера write-only,
+  # после a+rw udevadm trigger читает его, ловит EIO и отменяет coldplug целиком,
+  # и /boot с /mnt/windows не монтируются. Атрибуты устройства это всё равно не открывало.
   services.udev.packages = [ pkgs.lenovo-legion ];
 
   # 🛑 Убиваем power-profiles-daemon, он конфликтует с legion-laptop
