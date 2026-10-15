@@ -15,6 +15,13 @@ let
     "/usr/local/share"
     "/usr/share"
   ];
+  # Arch has no xterm-kitty entry: kitty and its terminfo come from Nix.
+  terminfoDirs = lib.concatStringsSep ":" [
+    "${config.home.profileDirectory}/share/terminfo"
+    "/etc/terminfo"
+    "/lib/terminfo"
+    "/usr/share/terminfo"
+  ];
 in
 {
   config = lib.mkMerge [
@@ -42,7 +49,13 @@ in
         "${config.home.profileDirectory}/bin"
         "/nix/var/nix/profiles/default/bin"
       ];
-      home.sessionVariables.NIXOS_OZONE_WL = "1";
+      home.sessionVariables = {
+        NIXOS_OZONE_WL = "1";
+        # genericLinux exports TERMINFO_DIRS only through environment.d, which
+        # SSH logins never read. Without it ZLE loses cursor movement and every
+        # redraw is appended to the line.
+        TERMINFO_DIRS = terminfoDirs;
+      };
       systemd.user.sessionVariables = {
         PATH = "${sessionPath}:$PATH";
         NIXOS_OZONE_WL = "1";
