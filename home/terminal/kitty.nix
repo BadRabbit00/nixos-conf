@@ -1,4 +1,4 @@
-{ pkgs, gpuWrap, ... }:
+{ pkgs, lib, gpuWrap, isNixOS ? true, ... }:
 
 {
   programs.kitty = {
@@ -102,6 +102,18 @@
 
       # Настройка размытия (для Hyprland)
       background_blur 1
+    '' + lib.optionalString (!isNixOS) ''
+
+      # nixGL drivers are for kitty itself. The shell must not inherit them:
+      # Arch CUDA programs would load Nix libraries via LD_LIBRARY_PATH, and
+      # Nix GUI programs bring their own wrapper anyway.
+      env LD_LIBRARY_PATH
+      env GBM_BACKENDS_PATH
+      env LIBGL_DRIVERS_PATH
+      env LIBVA_DRIVERS_PATH
+      env __EGL_VENDOR_LIBRARY_FILENAMES
+      env VK_ICD_FILENAMES
+      env VK_LAYER_PATH
     '';
   };
 }

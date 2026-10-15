@@ -109,10 +109,18 @@ generation с компьютера с другой версией драйвер
 
 Все пользовательские программы остаются из Nix. Общий хелпер `gpuWrap` вызывает
 `config.lib.nixGL.wrap` только на Arch и возвращает исходный пакет на NixOS.
-Используется штатная интеграция HM `targets.genericLinux.nixGL`, wrapper `nvidia`,
-с поддержкой OpenGL/EGL и Vulkan. Обёртка задаёт пути библиотек и NVIDIA JSON только
-в окружении запускаемого процесса и его потомков. Глобальные переменные GPU,
-файлы драйвера в системных каталогах и системные службы для этого не создаются.
+Используется штатная интеграция HM `targets.genericLinux.nixGL`, wrapper `mesa`
+(встройка Intel), с поддержкой OpenGL/EGL и Vulkan. Обёртка задаёт пути библиотек
+Mesa только в окружении запускаемого процесса; kitty не передаёт их своему шеллу.
+
+**Политика GPU на ARCH-BOX.** Монитор подключён к RTX 5080 по HDMI (на материнке
+у встройки только DisplayPort), но рабочие столы рисуют на iGPU: niri через
+`debug { render-drm-device }`, GDM и GNOME через udev-метку
+`mutter-device-preferred-primary` (`arch/gpu/61-mutter-primary-gpu.rules`). RTX
+только выводит готовый кадр и свободна для CUDA у обоих аккаунтов.
+`arch/gpu/90-nvidia-compute-only.conf` (`/etc/environment.d`) скрывает
+Vulkan-драйвер NVIDIA от программ всех пользователей; CUDA его не использует.
+Vulkan-нейронка на RTX: `VK_LOADER_DRIVERS_DISABLE= <команда>`.
 
 Обёрнутые программы:
 
@@ -162,7 +170,7 @@ external-platform lookup на Nix-библиотеки Wayland/GBM/X11 внут�
 и GDM (без перезапуска GDM). Собственных настроек в `/etc/profile.d`,
 `/etc/environment`, EGL/Vulkan, tmpfiles, GDM или dconf он не записывает.
 Штатные файлы пакетов и включение трёх общих служб относятся к системной установке.
-Новых пакетов относительно прежнего установщика не добавлено; из списка убраны
+Для рендера на встройке добавлены `vulkan-intel` и `intel-media-driver`; из списка убраны
 лишние пользовательские CLI и zsh. Оставшийся явный список:
 
 ```text
@@ -170,6 +178,7 @@ niri xwayland-satellite hyprlock hypridle
 gdm gnome-shell gnome-session accountsservice
 xdg-desktop-portal xdg-desktop-portal-gnome xdg-desktop-portal-gtk
 nvidia-open nvidia-utils egl-wayland egl-gbm egl-x11 vulkan-icd-loader
+vulkan-intel intel-media-driver
 networkmanager bluez bluez-utils brightnessctl
 pipewire pipewire-pulse wireplumber libpulse
 polkit polkit-gnome gnome-keyring udisks2 gvfs fontconfig
@@ -266,7 +275,7 @@ shellcheck arch/setup-system.sh
 
 1. В GDM войдите как `badrabbit`: должна открыться niri без ручного выбора.
    Запустите kitty, Firefox, Chrome, VS Code из rofi и биндов; `nvidia-smi`
-   должен видеть RTX 5080 и GPU-процессы. Проверьте Waybar, звук, Bluetooth,
+   должен показывать только niri (вывод кадра) и CUDA-процессы. Проверьте Waybar, звук, Bluetooth,
    portals/screencast, шрифты и принятие пароля hyprlock.
 2. Проверьте `systemctl --user status waybar swaync hypridle niri-polkit-agent nm-applet pasystray`.
    Для окружения бинда: `niri msg action spawn -- sh -c 'env > "$XDG_RUNTIME_DIR/niri-env"'`,

@@ -9,7 +9,7 @@ The configuration is split into three main layers to ensure modularity and ease 
 *   **Flake Entry (`flake.nix`)**: Defines `nixosConfigurations.badrabbitpc` (`BadRabbit`) and standalone `homeConfigurations."badrabbit@ARCH-BOX"` (`badrabbit`, `/home/badrabbit`). Both use the same `home/` modules and shared package fixes.
 *   **Host Layer (`hosts/desktop/`)**: Contains system-level NixOS modules specific to the hardware and core OS settings (bootloader, networking, drivers, NVIDIA).
 *   **User Layer (`home/`)**: Managed by Home Manager, this directory handles all dotfiles, application settings, and the "Infernal Blood" aesthetic.
-*   **Arch System Layer (`arch/`)**: `setup-system.sh` installs pacman packages and updates only badrabbit's GDM session. `nixgl.nix` adapts nixGL auto-detection to nvidia-open and the pinned nixpkgs. All user applications come from Nix; Home Manager never needs root.
+*   **Arch System Layer (`arch/`)**: `setup-system.sh` installs pacman packages and updates only badrabbit's GDM session. `nixgl.nix` adapts nixGL auto-detection to nvidia-open and the pinned nixpkgs. `gpu/` holds the system GPU policy: every desktop (niri, GNOME, GDM) renders on the Intel iGPU, the RTX only scans out the HDMI monitor and runs CUDA for both accounts. All user applications come from Nix; Home Manager never needs root.
 *   **Shared Modules (`modules/`)**: Reusable Nix expressions for system-wide services like `audio.nix`, `nvidia.nix`, and `niri/default.nix`.
 
 ## 🎨 Aesthetic Profile: "Infernal Blood"
@@ -53,7 +53,7 @@ Navigation uses the `SUPER` (Win) key with standard arrow keys:
 
 ## ⚙️ Development Conventions
 
-*   **Isolation**: All user applications come from Nix. Arch GPU support uses the shared `gpuWrap` helper and process-local nixGL. No global GPU environment, EGL/Vulkan configuration or root HM activation. Bind all Arch autostart to `niri.service`, including D-Bus and optional sops; never alter other accounts. Keep sockets/temporary session files in `$XDG_RUNTIME_DIR`.
+*   **Isolation**: All user applications come from Nix. Arch GPU support uses the shared `gpuWrap` helper and process-local nixGL with the `mesa` (Intel iGPU) wrapper; never route desktop apps to NVIDIA. The only global GPU settings are `arch/gpu/` (mutter primary GPU, NVIDIA Vulkan driver hidden); no root HM activation. Bind all Arch autostart to `niri.service`, including D-Bus and optional sops; never alter other accounts. Keep sockets/temporary session files in `$XDG_RUNTIME_DIR`.
 *   **Two Platforms**: Pass `isNixOS` explicitly through HM `extraSpecialArgs` (`true` for NixOS, `false` for standalone). Guard every platform difference with it; never copy `home/` into an Arch-specific module tree. Preserve NixOS behavior.
 *   **Module Ownership**: HM uses Catppuccin packages, not `catppuccin.*` options. The sops HM module comes from `sharedHomeModules`; Arch decryption is opt-in via the string argument `sopsAgeKeyFile`. Never commit private keys or read them into the Nix store.
 *   **Generated Files**: Keep `graphify-out/`, build results, logs, caches and credentials ignored. Track new source files explicitly and maintain `.gitattributes` for text/binary formats.

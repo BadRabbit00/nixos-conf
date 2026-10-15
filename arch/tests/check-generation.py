@@ -16,7 +16,8 @@ def check_generation(generation: Path) -> None:
 
     def check_wrapper(path: Path) -> None:
         # Depending on the app's stdenv, makeWrapper emits a shell script or ELF.
-        assert b"nixGLCombinedWrapper-Nvidia" in path.read_bytes(), f"Unwrapped entry point: {path}"
+        # Desktop apps must render on the Intel iGPU, never through the NVIDIA wrapper.
+        assert b"nixGLCombinedWrapper-Intel" in path.read_bytes(), f"Not on the iGPU wrapper: {path}"
 
     for name in wrapped:
         check_wrapper(profile / "bin" / name)
@@ -60,6 +61,9 @@ def check_generation(generation: Path) -> None:
     assert 'spawn-at-startup "awww-daemon"' in niri
     assert 'spawn-at-startup "wl-paste"' in niri
     assert "TMPDIR=%t" in (units / "niri.service.d/10-home-manager.conf").read_text()
+    assert 'render-drm-device "/dev/dri/by-path/pci-0000:00:02.0-render"' in niri
+    kitty = (files / ".config/kitty/kitty.conf").read_text().splitlines()
+    assert {"env LD_LIBRARY_PATH", "env VK_ICD_FILENAMES", "env __EGL_VENDOR_LIBRARY_FILENAMES"} <= set(kitty)
     print(f"Verified {len(wrapped)} GPU packages, desktop/D-Bus entry points and niri-only services.")
 
 

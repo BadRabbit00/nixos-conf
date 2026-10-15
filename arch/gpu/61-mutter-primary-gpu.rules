@@ -1,0 +1,3 @@
+# GDM and GNOME render on the Intel iGPU. The monitor stays on the RTX, which
+# only scans out the finished frame and is otherwise left to CUDA workloads.
+SUBSYSTEM=="drm", KERNEL=="card[0-9]*", DRIVERS=="i915|xe", TAG+="mutter-device-preferred-primary"

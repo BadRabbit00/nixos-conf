@@ -118,7 +118,8 @@
           targets.genericLinux.enable = true;
           targets.genericLinux.nixGL = {
             packages = import ./arch/nixgl.nix { inherit pkgs; nixgl = inputs.nixgl; };
-            defaultWrapper = "nvidia";
+            # Desktop apps render on the Intel iGPU; the RTX is kept for CUDA.
+            defaultWrapper = "mesa";
             vulkan.enable = true;
           };
         })

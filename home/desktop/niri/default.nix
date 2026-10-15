@@ -16,6 +16,8 @@
     # GDM already authenticated the user. Keep greetd's startup lock on NixOS.
     # Arch niri manages Xwayland on demand; don't force DISPLAY=:0 or start a
     # second satellite manually. All other bindings come from the same file.
+    # The monitor is wired to the RTX, but niri renders on the Intel iGPU; the
+    # RTX only scans out the finished frame and stays free for CUDA.
     text = lib.replaceStrings
       [ ''spawn-at-startup "hyprlock"''
         ''spawn-at-startup "swaync"''
@@ -27,7 +29,12 @@
         "// niri starts the system xwayland-satellite on demand."
         ""
         ''spawn "/usr/bin/hyprlock"'' ]
-      (builtins.readFile ./config.kdl);
+      (builtins.readFile ./config.kdl) + ''
+
+      debug {
+          render-drm-device "/dev/dri/by-path/pci-0000:00:02.0-render"
+      }
+    '';
   };
   xdg.configFile."hypr/hyprlock.conf".source = ./hyprlock.conf;
   

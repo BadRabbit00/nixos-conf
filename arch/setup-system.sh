@@ -35,6 +35,8 @@ packages=(
     egl-gbm                  # NVIDIA EGL GBM platform
     egl-x11                  # NVIDIA EGL X11 platform for Xwayland
     vulkan-icd-loader        # Host Vulkan loader
+    vulkan-intel             # iGPU Vulkan: the desktop renders on Intel
+    intel-media-driver       # iGPU VA-API video decoding
     networkmanager          # Network service, polkit rules and nmcli
     bluez                    # Bluetooth daemon and D-Bus policy
     bluez-utils              # bluetoothctl used by Mechabar
@@ -49,6 +51,7 @@ packages=(
     udisks2                  # Privileged disk operations for Thunar
     gvfs                     # User mounts and trash support for GTK applications
     fontconfig               # Host font discovery, including HM fontconfig rules
+    kitty-terminfo           # xterm-kitty for host ncurses outside the HM env (sudo, root, ssh)
     util-linux               # rfkill, logger and runuser
     pacman-contrib           # checkupdates used by system-update.sh
     python                   # Interpreter for the root AccountsService helper
@@ -65,6 +68,13 @@ if [[ ! -f $session_file ]]; then
 fi
 session=${session_file##*/}
 session=${session%.desktop}
+# The monitor is wired to the RTX, but every account's desktop renders on the
+# iGPU; the RTX scans out and runs CUDA. Takes effect at the next GDM/session start.
+install -Dm644 "$script_dir/gpu/61-mutter-primary-gpu.rules" /etc/udev/rules.d/61-mutter-primary-gpu.rules
+install -Dm644 "$script_dir/gpu/90-nvidia-compute-only.conf" /etc/environment.d/90-nvidia-compute-only.conf
+udevadm control --reload
+udevadm trigger --action=change --subsystem-match=drm --property-match=DEVTYPE=drm_minor
+
 python "$script_dir/accounts-service.py" /var/lib/AccountsService/users/badrabbit "$session"
 systemctl restart accounts-daemon.service
 systemctl enable --now NetworkManager.service bluetooth.service

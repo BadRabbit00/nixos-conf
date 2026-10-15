@@ -28,6 +28,8 @@ let
   });
 in
 packages // {
+  # The default "mesa" wrapper lives at nixGL's top level, not under `auto`.
+  inherit (upstream) nixGLIntel nixVulkanIntel;
   # Current NVIDIA uses external EGL platform JSON for Wayland/GBM. Keep that
   # lookup process-local too, instead of loading Arch's libraries into Nix apps.
   nixGLNvidia = adapt packages.nixGLNvidia;
