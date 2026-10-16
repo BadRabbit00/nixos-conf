@@ -72,7 +72,11 @@ let
     };
   };
 
-  skills = { inherit arena; };
+  # name -> каталог скилла (derivation или путь внутри неё).
+  skills = { inherit arena; }
+    // import ./brainstorming.nix { inherit lib pkgs; }
+    // import ./ui-ux-pro-max.nix { inherit lib pkgs; }
+    // import ./emil.nix { inherit lib pkgs; };
 
   roots = [ ".claude/skills" ".codex/skills" ".gemini/config/skills" ];
 
