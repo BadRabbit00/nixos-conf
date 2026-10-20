@@ -1,5 +1,29 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, isNixOS ? true, ... }:
 
+let
+  # Секреты sops -> переменные окружения в каждой интерактивной сессии.
+  # Расшифрованное лежит в tmpfs (/run/secrets или $XDG_RUNTIME_DIR/secrets),
+  # в /nix/store попадают только имена. Новый секрет = строка здесь плюс
+  # объявление в modules/core/secrets.nix и home/secrets.nix.
+  secretEnv = {
+    CONTEXT7_API_KEY = "context7_api_key";
+    WIKI_TOKEN = "wiki_token";
+  };
+  secretsDir = if isNixOS then "/run/secrets" else config.sops.defaultSymlinkPath;
+
+  # Хук на каждый промпт: после `switch` свежие значения подхватывает и уже
+  # открытый терминал. `$(<file)` читает без fork, цена на промпт ничтожна.
+  loadSecretEnv = ''
+    __sops_env_load() {
+      local f
+      ${lib.concatStringsSep "\n      " (lib.mapAttrsToList (var: name: ''
+        f=${lib.escapeShellArg "${secretsDir}/${name}"}
+        [ -r "$f" ] && export ${var}="$(<"$f")"'') secretEnv)}
+      return 0
+    }
+    __sops_env_load
+  '';
+in
 {
   programs.git = {
     enable = true;
@@ -35,9 +59,17 @@
     };
 
     initContent = ''
+      ${loadSecretEnv}
+      precmd_functions+=(__sops_env_load)
       fastfetch
     '';
   };
+
+  # На Arch bash включён ради niri-session; на NixOS его не трогаем.
+  programs.bash.initExtra = lib.mkIf config.programs.bash.enable ''
+    ${loadSecretEnv}
+    PROMPT_COMMAND="__sops_env_load''${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
+  '';
 
   programs.starship = {
     enable = true;

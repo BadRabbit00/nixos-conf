@@ -7,5 +7,6 @@
     age.keyFile = sopsAgeKeyFile;
     defaultSopsFile = ../modules/core/secrets/secrets.yaml;
     secrets.context7_api_key = { };
+    secrets.wiki_token = { };
   };
 }

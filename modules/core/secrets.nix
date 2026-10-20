@@ -26,4 +26,11 @@
     owner = "BadRabbit";
     mode = "0400";
   };
+
+  # Токен вики (WIKI_TOKEN для wk и MCP). В переменную окружения его кладёт
+  # хук zsh из home/shell/default.nix.
+  sops.secrets.wiki_token = {
+    owner = "BadRabbit";
+    mode = "0400";
+  };
 }
