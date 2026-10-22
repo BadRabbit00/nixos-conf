@@ -67,6 +67,70 @@ let
   # Команды-обёртки, которым нечего делать без апстримного инсталлятора.
   excludedCommands = [ "auto-update" ];
 
+  # Модель и effort каждого агента для трёх CLI. Апстрим ставит алиасы
+  # (sonnet/opus), которые съезжают вместе с дефолтами; здесь полные ID.
+  #   claude — model/effort в frontmatter ~/.claude/agents/<n>.md
+  #   codex  — model/model_reasoning_effort в ~/.codex/agents/<n>.toml
+  #   agy    — только тир (inherit|flash_lite|flash|pro) в ~/.gemini/config/agents/<n>.md;
+  #            полный ID agy молча отбрасывает вместе с файлом, effort на агента
+  #            не ставится (берётся из сессии: agy --effort / /effort).
+  # Схема Архитектора: ревью, безопасность, рефакторинг, сборка — Opus 5.5 /
+  # Astra; кодинг — Sonnet 5.5 / Sol 6.1; механика — Haiku 5.5 / Luna; в Codex
+  # везде минимум high; security-reviewer и architect — Fable 5.1 / Astra xhigh;
+  # тяжёлые языки (rust, cpp) — xhigh. В agy тир pro (Argon) только для
+  # безопасности, архитектуры и глубокого рефакторинга, остальное flash (3.8),
+  # механика flash_lite.
+  # Сборка payload падает, если агент из таблицы пропал или у какого-то агента
+  # после подстановки нет model/effort (новый агент в апстриме → дописать сюда).
+  agentModels =
+    let
+      cls = cm: ce: xm: xe: tier: { inherit cm ce xm xe tier; };
+      fable   = cls "claude-fable-5-1"  "medium" "gpt-6-astra" "xhigh" "pro";
+      opusX   = cls "claude-opus-5-5"   "xhigh"  "gpt-6-astra" "xhigh" "flash";
+      opusH   = cls "claude-opus-5-5"   "high"   "gpt-6-astra" "high"  "flash";
+      opusM   = cls "claude-opus-5-5"   "medium" "gpt-6-astra" "high"  "flash";
+      sonnetH = cls "claude-sonnet-5-5" "high"   "gpt-6.1-sol" "high"  "flash";
+      sonnetM = cls "claude-sonnet-5-5" "medium" "gpt-6.1-sol" "high"  "flash";
+      haikuH  = cls "claude-haiku-5-5"  "high"   "gpt-6-luna"  "high"  "flash_lite";
+      haikuM  = cls "claude-haiku-5-5"  "medium" "gpt-6-luna"  "high"  "flash_lite";
+      many = v: names: lib.genAttrs names (_: v);
+    in
+    many fable [ "security-reviewer" "architect" ]
+    // many opusX [ "rust-reviewer" "cpp-reviewer" "rust-build-resolver" "cpp-build-resolver" ]
+    // many opusH [
+      # ревьюеры
+      "code-reviewer" "database-reviewer" "python-reviewer" "fastapi-reviewer" "django-reviewer"
+      "go-reviewer" "typescript-reviewer" "react-reviewer" "vue-reviewer" "kotlin-reviewer"
+      "flutter-reviewer" "swift-reviewer" "java-reviewer" "csharp-reviewer" "fsharp-reviewer"
+      "php-reviewer" "ruby-reviewer" "mle-reviewer" "rag-pipeline-reviewer" "healthcare-reviewer"
+      "bengali-reviewer" "network-config-reviewer"
+      # ревью-помощники
+      "silent-failure-hunter" "pr-test-analyzer" "type-design-analyzer" "gan-evaluator"
+      # рефакторинг
+      "code-simplifier" "performance-optimizer"
+      # сборка (общий)
+      "build-error-resolver"
+      # планирование
+      "planner" "code-architect" "spec-miner"
+    ]
+    // { refactor-cleaner = opusH // { tier = "pro"; }; }   # глубокий рефакторинг → Argon
+    // many opusM [ "agent-evaluator" "gan-planner" ]
+    // many sonnetH [
+      "tdd-guide" "gan-generator" "harmonyos-app-resolver"
+      "kotlin-build-resolver" "java-build-resolver" "swift-build-resolver" "pytorch-build-resolver"
+    ]
+    // many sonnetM [
+      "e2e-runner" "code-explorer" "commit-reviewer" "loop-operator" "harness-optimizer"
+      "opensource-sanitizer" "a11y-architect" "homelab-architect" "network-architect"
+      "network-troubleshooter" "chief-of-staff" "marketing-agent" "seo-specialist"
+      "go-build-resolver" "dart-build-resolver" "django-build-resolver" "react-build-resolver"
+    ]
+    // many haikuH [ "doc-updater" "docs-lookup" ]
+    // many haikuM [ "comment-analyzer" "conversation-analyzer" "opensource-forker" "opensource-packager" ];
+
+  agentModelTable = pkgs.writeText "ecc-agent-models.tsv" (lib.concatStrings
+    (lib.mapAttrsToList (n: v: "${n}\t${v.cm}\t${v.ce}\t${v.xm}\t${v.xe}\t${v.tier}\n") agentModels));
+
   # Хуки: профиль standard, но без того, что мешает одному разработчику на Nix.
   #   GateGuard — отклоняет первый Edit каждого файла и первый Bash за сессию;
   #   config-protection — блокирует правку конфигов линтеров;
@@ -238,7 +302,7 @@ let
 
   # --- Nix-баннер для документации --------------------------------------------
   nixBanner = pkgs.writeText "ecc-nix-banner.md" ''
-    > **NixOS environment (local adaptation of this ECC skill).** This machine is
+    > **NixOS environment (local adaptation of this ECC file).** This machine is
     > NixOS and everything is declarative. Before following any command below:
     > - Run project tooling inside the project's devShell: `nix develop -c <cmd>`
     >   (or under direnv). One-off tools: `nix shell nixpkgs#<pkg> -c <cmd>`.
@@ -253,6 +317,9 @@ let
     >   contents, no shell), not hand-written `Dockerfile`s with `apt-get`.
     > - Heavy builds: `nix build --max-jobs 4 --cores 4` so 24 cores do not swap.
     > - Scripts that ship with ECC run only through the pinned `ecc-run` wrapper;
+    > - Nix work has its own toolkit: `/nix-plan`, `/nix-write`, `/nix-build`, `/nix-test`,
+    >   `/nix-review`, `/nix-fix`, agents `nix-architect`/`nix-engineer`/`nix-reviewer`/
+    >   `nix-build-resolver`/`nix-test-runner`, skills `nix-toolkit`, `nix-packaging`.
     >   secrets reach the devShell from sops-nix, never hardcoded or committed.
     >
     > Wherever the text below says `pip install`, `npm i -g`, `brew install`,
@@ -272,7 +339,7 @@ let
 
     installPhase = ''
       runHook preInstall
-      mkdir -p "$out"/claude/{skills,agents,commands,rules/ecc} "$out"/codex/{skills,prompts,agents}
+      mkdir -p "$out"/claude/{skills,agents,commands,rules/ecc} "$out"/codex/{skills,prompts,agents} "$out"/agy/agents
 
       # Какие скиллы попадают в выборку: paths модулей из манифеста минус
       # исключения. Манифест — источник правды, список скиллов не дублируем.
@@ -289,6 +356,24 @@ let
       cp agents/*.md "$out/claude/agents/"
       cp commands/*.md "$out/claude/commands/"
       for c in ${lib.escapeShellArgs excludedCommands}; do rm "$out/claude/commands/$c.md"; done
+
+      # Модель и effort в frontmatter каждого агента (таблица agentModels выше).
+      while IFS=$'\t' read -r name model effort _xm _xe _tier; do
+        f="$out/claude/agents/$name.md"
+        [ -f "$f" ] || { echo "agentModels lists missing agent: $name" >&2; exit 1; }
+        awk -v model="$model" -v effort="$effort" '
+          BEGIN { fm = 0 }
+          /^---[[:space:]]*$/ { fm++; if (fm == 2) { print "model: " model; print "effort: " effort } print; next }
+          fm == 1 && /^(model|effort):/ { next }
+          { print }
+        ' "$f" > "$f.tmp" && mv "$f.tmp" "$f"
+      done < ${agentModelTable}
+      for f in "$out"/claude/agents/*.md; do
+        awk '/^---[[:space:]]*$/ { fm++; next } fm == 1' "$f" | grep -q '^model: claude-' \
+          || { echo "agent without pinned model (add to agentModels): $f" >&2; exit 1; }
+        awk '/^---[[:space:]]*$/ { fm++; next } fm == 1' "$f" | grep -q '^effort: ' \
+          || { echo "agent without effort (add to agentModels): $f" >&2; exit 1; }
+      done
       cp -r rules/. "$out/claude/rules/ecc/"
       cp LICENSE "$out/LICENSE"
       chmod -R u+w "$out"
@@ -357,9 +442,10 @@ let
       # пытался их разыменовать: здесь их не существует.
       sed -E -i 's/`\$\{(CLAUDE_PLUGIN_ROOT|CLAUDE_SKILL_DIR)\}`/`\1`/g' $mds
 
-      # 4. Баннер Nix-доктрины после frontmatter в каждом SKILL.md и команде,
-      #    отдельное always-on правило и вводная для codex.
-      for f in $(find "$out/claude/skills" -name SKILL.md) "$out"/claude/commands/*.md; do
+      # 4. Баннер Nix-доктрины после frontmatter в каждом SKILL.md, команде и
+      #    агенте (сабагент не видит системную инструкцию, зато читает свой
+      #    файл), отдельное always-on правило и вводная для codex.
+      for f in $(find "$out/claude/skills" -name SKILL.md) "$out"/claude/commands/*.md "$out"/claude/agents/*.md; do
         awk -v banner="$(cat ${nixBanner})" '
           BEGIN { fm = 0; done = 0 }
           { print }
@@ -386,6 +472,32 @@ let
       # ---- Codex ---------------------------------------------------------------
       cp -r "$out/claude/skills/." "$out/codex/skills/"
       cp .codex/agents/*.toml "$out/codex/agents/"
+      # Три апстримные роли ECC — на ту же схему (минимум high).
+      sed -i -e 's/^model = .*/model = "gpt-6.1-sol"/' -e 's/^model_reasoning_effort = .*/model_reasoning_effort = "high"/' "$out/codex/agents/explorer.toml"
+      sed -i -e 's/^model = .*/model = "gpt-6-astra"/'  -e 's/^model_reasoning_effort = .*/model_reasoning_effort = "high"/' "$out/codex/agents/reviewer.toml"
+      sed -i -e 's/^model = .*/model = "gpt-6-luna"/'   -e 's/^model_reasoning_effort = .*/model_reasoning_effort = "high"/' "$out/codex/agents/docs-researcher.toml"
+      # Каждый агент Claude -> роль Codex (~/.codex/agents/<n>.toml, ищется по
+      # name) и агент agy (~/.gemini/config/agents/<n>.md). Тело (с Nix-баннером)
+      # становится developer_instructions / системным промптом. tools не
+      # переносим: имена инструментов у каждого CLI свои, agy на чужом имени виснет.
+      while IFS=$'\t' read -r name _cm _ce xm xe tier; do
+        f="$out/claude/agents/$name.md"
+        desc=$(awk '/^---[[:space:]]*$/{c++; next} c==1 && /^description:/{sub(/^description:[ ]*/,""); print; exit}' "$f" \
+          | sed -E "s/^\"(.*)\"$/\1/; s/^'(.*)'$/\1/")
+        [ -n "$desc" ] || { echo "agent without description: $name" >&2; exit 1; }
+        body=$(awk '/^---[[:space:]]*$/{c++; next} c>=2' "$f")
+        case "$body" in *"''''"*) echo "agent body contains '''' (TOML literal string): $name" >&2; exit 1;; esac
+        { printf 'name = "%s"\n' "$name"
+          printf 'description = %s\n' "$(jq -Rn --arg d "$desc" '$d')"
+          printf 'model = "%s"\nmodel_reasoning_effort = "%s"\n\n' "$xm" "$xe"
+          printf "developer_instructions = ''''\n%s\n''''\n" "$body"
+        } > "$out/codex/agents/$name.toml"
+        { printf -- '---\nname: %s\ndescription: %s\nmodel: %s\nsubagent: true\nmainAgent: true\n---\n\n' \
+            "$name" "$(jq -Rn --arg d "$desc" '$d')" "$tier"
+          printf '%s\n' "$body"
+        } > "$out/agy/agents/$name.md"
+      done < ${agentModelTable}
+      echo "Codex roles: $(command ls "$out/codex/agents" | wc -l), agy agents: $(command ls "$out/agy/agents" | wc -l)"
       # Команды -> ~/.codex/prompts/ecc-<cmd>.md, как legacy sync: без frontmatter.
       for f in "$out"/claude/commands/*.md; do
         name=$(basename "$f" .md)
@@ -399,6 +511,8 @@ let
         cat .codex/AGENTS.md
         printf '\n\n---\n\n'
         cat ${./nix-first.md}
+        printf '\n\n---\n\n'
+        cat ${./ECC-GUIDE.md}
       } | sed -E \
           -e 's/(^|[^A-Za-z0-9_@.-])ecc:([a-z][a-z0-9-]*)/\1\2/g' \
           -e 's#`\.agents/skills/`#`~/.codex/skills/` (selected ECC skills, managed by Nix)#g' \
@@ -522,6 +636,10 @@ in
     ".codex/prompts"    = recursive "${payload}/codex/prompts";
     ".codex/agents"     = recursive "${payload}/codex/agents";
     ".codex/AGENTS.md".source = "${payload}/codex/AGENTS.md";
+    ".gemini/config/agents" = recursive "${payload}/agy/agents";
+    # Гайд по всем командам: claude подтягивает его из ~/.claude/CLAUDE.md
+    # через `@~/.claude/ecc-guide.md`, codex — внутри AGENTS.md выше.
+    ".claude/ecc-guide.md".source = ./ECC-GUIDE.md;
   };
 
   home.activation.eccSync =

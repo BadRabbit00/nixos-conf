@@ -8,6 +8,8 @@
     ./ai-mcp/default.nix
     ./ai-skills/default.nix
     ./ecc/default.nix
+    ./nix-toolkit/default.nix
+    ./ask-models/default.nix
   ];
 
   home.packages = with pkgs; [
