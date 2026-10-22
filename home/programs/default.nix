@@ -7,6 +7,7 @@
     ./zathura/default.nix
     ./ai-mcp/default.nix
     ./ai-skills/default.nix
+    ./ecc/default.nix
   ];
 
   home.packages = with pkgs; [

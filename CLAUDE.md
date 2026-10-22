@@ -49,6 +49,8 @@ Navigation uses the `SUPER` (Win) key with standard arrow keys:
 | `home/desktop/niri/` | Core window manager logic and keybindings. |
 | `home/desktop/waybar/` | "Mechabar" styling and integrated scripts. |
 | `modules/core/` | System-wide service configurations (Audio, Nvidia, etc.). |
+| `home/programs/ai-skills/` | Third-party SKILL.md skills for claude, codex and agy, each pinned by rev/hash with Nix-wrapped scripts. |
+| `home/programs/ecc/` | ECC (Everything Claude Code): skills, agents, commands, rules and the hook runtime for claude and codex. Module selection, excluded skills and hook env live at the top of `default.nix`; `ecc-run`/`ecc-hook` are the only entry points; hooks are merged into `~/.claude/settings.json` by `ecc-sync`. |
 | `setup.sh` | Utility script for initial deployment and renaming. |
 
 ## ⚙️ Development Conventions
