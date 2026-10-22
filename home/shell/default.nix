@@ -71,6 +71,20 @@ in
     PROMPT_COMMAND="__sops_env_load''${PROMPT_COMMAND:+;$PROMPT_COMMAND}"
   '';
 
+  # direnv: шелл сам поднимает devShell проекта по .envrc (`use flake`).
+  # nix-direnv кэширует окружение в .direnv/ и держит его в gcroots, чтобы
+  # `cd` не запускал eval флейка каждый раз и GC не выметал toolchain.
+  # Хуки в zsh/bash HM вешает сам (enable*Integration по умолчанию true).
+  # Доверие остаётся ручным: новый .envrc требует `direnv allow`.
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+    config.global = {
+      hide_env_diff = true; # не спамить списком переменных при каждом cd
+      warn_timeout = "60s"; # холодный eval тяжёлого флейка дольше дефолтных 5s
+    };
+  };
+
   programs.starship = {
     enable = true;
     settings = {
