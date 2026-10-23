@@ -20,6 +20,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # --- storytold Crafting Apps (photocraft, filmcraft, effectcraft, …) ---
+    # В nixpkgs их пока нет (PR #571418/#571426/#571432 открыты и отстают на
+    # несколько релизов). Флейк берёт официальные прибилженные tar.gz с GitHub
+    # releases и чинит их autoPatchelf — без многочасовой сборки трёх Rust-монстров.
+    # Обновляется ежедневно ботом; `nix flake update craftapps` подтянет новые версии.
+    craftapps = {
+      url = "github:olafkfreund/nix-craftapps";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # --- uv2nix: питон-локи -> нативные деривации ---------------------------
     # Нужны, чтобы colab-mcp (home/ai/mcp/colab-mcp.nix) собирался из
     # своего uv.lock целиком в /nix/store, а не резолвил зависимости через uv в
@@ -84,6 +94,9 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            # Чужой файл на месте HM-симлинка (например, правленный руками
+            # ~/.claude/CLAUDE.md) уезжает в *.hm-bak, а не роняет активацию при загрузке.
+            home-manager.backupFileExtension = "hm-bak";
             # specialArgs выше кормит только NixOS-модули; home-модулям inputs
             # надо передать отдельно, иначе ai-mcp не увидит uv2nix.
             home-manager.extraSpecialArgs = { isNixOS = true; inherit inputs; };

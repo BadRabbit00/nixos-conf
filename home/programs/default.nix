@@ -5,6 +5,7 @@
     ./neovim/default.nix
     ./obsidian/default.nix
     ./zathura/default.nix
+    ./craftapps/default.nix
   ];
 
   home.packages = with pkgs; [

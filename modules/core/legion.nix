@@ -7,8 +7,8 @@
     options legion-laptop force=1
   '';
 
-  # ⚡ Максимальная производительность процессора (5+ GHz)
-  powerManagement.cpuFreqGovernor = lib.mkForce "performance";
+  # ⚡ Governor и профиль прошивки живут в power.nix: от сети performance,
+  # на батарее powersave + balanced. Статичный performance на батарее стоил 28 Вт в простое.
 
   # 💉 Внедряем проприетарный модуль LenovoLegionLinux
   boot.extraModulePackages = with config.boot.kernelPackages; [
@@ -38,50 +38,85 @@
   # 🛑 Убиваем power-profiles-daemon, он конфликтует с legion-laptop
   services.power-profiles-daemon.enable = false;
 
-  # 🚀 Авто-применение Custom режима и Power Limits при старте
-  systemd.services.legion-power-limits = {
-    description = "Apply Lenovo Legion Custom Power Limits for i9-14900HX";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "multi-user.target" ];
-    path = [ pkgs.lenovo-legion ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "legion-power-limits" ''
-        legion_cli set-feature PlatformProfileFeature custom || true
-        legion_cli set-feature CPULongtermPowerLimit 130 || true
-        legion_cli set-feature CPUShorttermPowerLimit 175 || true
-        legion_cli set-feature CPUPeakPowerLimit 180 || true
-        legion_cli set-feature CPUCrossLoadingPowerLimit 100 || true
-      '';
-    };
-  };
-
-  # 🌪 Агрессивный термоконтроль: Вентиляторы на MAX при >= 80°C
+  # 🌪 Агрессивный термоконтроль: вентиляторы на MAX при CPU/GPU >= 80°C.
+  # Работает ТОЛЬКО в профиле custom: драйвер отвечает EBUSY с «fan_fullspeed needs
+  # powermode 255 (custom)» в любом другом. В performance/balanced кривой рулит прошивка,
+  # и цикл просто спит. Профиль от сети задаётся в power.nix (acProfile).
+  # Температуры берём из legion_hwmon (CPU и GPU), а не из всех thermal_zone:
+  # датчик корпуса SEN5 держит 75°C в простое и загонял бы турбины на максимум зря.
+  # bash в path обязателен: legion_cli вызывает его и без него падает на старте.
   systemd.services.legion-fan-control = {
     description = "Lenovo Legion Aggressive Fan Control";
     wantedBy = [ "multi-user.target" ];
-    after = [ "multi-user.target" ];
-    path = [ pkgs.lenovo-legion pkgs.coreutils pkgs.gnugrep ];
+    # Без legion_hwmon нет смысла долбиться вечно: 5 попыток за 5 минут и стоп.
+    unitConfig = {
+      StartLimitIntervalSec = 300;
+      StartLimitBurst = 5;
+    };
+    path = [ pkgs.bash ];
     serviceConfig = {
       Type = "simple";
       Restart = "always";
-      ExecStart = pkgs.writeShellScript "legion-fan-control" ''
-        MAX_SPEED_ENABLED=0
-        while true; do
-          TEMP=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | sort -nr | head -n1)
-          if [ -n "$TEMP" ]; then
-            if [ "$TEMP" -ge 80000 ] && [ "$MAX_SPEED_ENABLED" -eq 0 ]; then
-              legion_cli maximumfanspeed-enable
-              MAX_SPEED_ENABLED=1
-            elif [ "$TEMP" -le 70000 ] && [ "$MAX_SPEED_ENABLED" -eq 1 ]; then
-              legion_cli maximumfanspeed-disable
-              MAX_SPEED_ENABLED=0
+      RestartSec = 5;
+      PrivateNetwork = true;
+      ProtectHome = true;
+      PrivateTmp = true;
+      NoNewPrivileges = true;
+      # Остановка службы не должна оставлять турбины на максимуме.
+      ExecStopPost = lib.getExe (pkgs.writeShellApplication {
+        name = "legion-fan-control-release";
+        runtimeInputs = with pkgs; [ bash coreutils lenovo-legion ];
+        text = ''
+          # Вне custom снимать нечего, а legion_cli ответил бы EBUSY с трейсбеком в журнал.
+          [ "$(cat /sys/firmware/acpi/platform_profile 2>/dev/null)" = custom ] || exit 0
+          legion_cli maximumfanspeed-disable
+        '';
+      });
+      ExecStart = lib.getExe (pkgs.writeShellApplication {
+        name = "legion-fan-control";
+        runtimeInputs = with pkgs; [ bash coreutils lenovo-legion ];
+        text = ''
+          hwmon=""
+          for name in /sys/class/hwmon/hwmon*/name; do
+            if [ "$(cat "$name")" = legion_hwmon ]; then
+              hwmon="$(dirname "$name")"
+              break
             fi
+          done
+          if [ -z "$hwmon" ]; then
+            echo "legion-fan-control: legion_hwmon not found, is legion-laptop loaded?" >&2
+            exit 1
           fi
-          sleep 2
-        done
-      '';
+
+          profile_is_custom() {
+            [ "$(cat /sys/firmware/acpi/platform_profile 2>/dev/null)" = custom ]
+          }
+
+          # После рестарта (Restart=always, nixos-rebuild switch) EC может всё ещё
+          # крутить максимум, а наша переменная уже 0. Приводим к известному состоянию.
+          if profile_is_custom; then
+            legion_cli maximumfanspeed-disable 2>/dev/null || true
+          fi
+          max_speed_enabled=0
+          while true; do
+            if ! profile_is_custom; then
+              max_speed_enabled=0
+              sleep 10
+              continue
+            fi
+            # || true: один EIO от EC на чтении датчика не должен ронять демон.
+            temp=$(cat "$hwmon"/temp[12]_input 2>/dev/null | sort -nr | head -n1 || true)
+            if [ -n "$temp" ]; then
+              if [ "$temp" -ge 80000 ] && [ "$max_speed_enabled" -eq 0 ]; then
+                legion_cli maximumfanspeed-enable && max_speed_enabled=1
+              elif [ "$temp" -le 70000 ] && [ "$max_speed_enabled" -eq 1 ]; then
+                legion_cli maximumfanspeed-disable && max_speed_enabled=0
+              fi
+            fi
+            sleep 2
+          done
+        '';
+      });
     };
   };
 }

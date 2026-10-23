@@ -20,8 +20,11 @@
     # Nvidia power management. Experimental, and can cause sleep/suspend to fail.
     powerManagement.enable = true; # Required for stable CUDA/AI workloads
 
-    # Fine-grained power management. Turns off GPU when not in use.
-    powerManagement.finegrained = false; 
+    # Fine-grained power management: GPU уходит в D3cold, когда не используется.
+    # В простое это −6 Вт на батарее. CUDA будит карту сама. В специализации ai
+    # llama-server держит VRAM, и карта не засыпает сама по себе; если понадобится
+    # прибить её бодрой жёстко — hardware.nvidia.moduleParams.nvidia.NVreg_DynamicPowerManagement = "0x00".
+    powerManagement.finegrained = true;
 
     # Use the NVidia open source kernel module.
     # Highly recommended for RTX 40/50 series. Full CUDA support included.
@@ -52,12 +55,13 @@
     "nvidia-drm.modeset=1" 
     "nvidia_drm.fbdev=1" 
     "NVreg_EnableGpuFirmware=1"
-    "NVreg_DynamicPowerManagement=0x02"
+    # NVreg_DynamicPowerManagement задаёт powerManagement.finegrained через modprobe.d;
+    # голый параметр в cmdline драйвер не видел.
     # ВНИМАНИЕ: pci=realloc + pci=nocsr роняли stage-2 udev на ядре 6.18.45
     # (EIO при перечислении sysfs -> симлинки by-uuid не создавались -> emergency).
-    # pci=nocsr вообще невалидный параметр. Убраны. Оставляем только мягкий ASPM-контроль.
-    "pcie_aspm=off"
-    "pcie_port_pm=off"
+    # pcie_aspm=off и pcie_port_pm=off тоже убраны (2026-10-22): они держали пакет CPU
+    # вне PC6/PC8 (28 Вт в простое) и не давали GPU уйти в D3cold. Политику ASPM
+    # переключает power-profile: default от сети, powersupersave на батарее.
     "nvidia.NVreg_EnableBacklightHandler=1"
     "acpi_backlight=native"
   ];

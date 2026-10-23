@@ -12,10 +12,12 @@
     ../../modules/core/nvidia.nix
     ../../modules/core/gaming.nix
     ../../modules/core/legion.nix
+    ../../modules/core/power.nix
     ../../modules/core/docker.nix
     ../../modules/core/btrfs.nix
     ../../modules/core/ai.nix
     ../../modules/core/secrets.nix
+    ../../modules/core/craftapps.nix
     ../../modules/niri/default.nix
   ];
   
