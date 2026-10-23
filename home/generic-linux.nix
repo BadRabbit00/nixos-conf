@@ -28,6 +28,14 @@ in
     {
       # One entry point for every home module; NixOS never evaluates nixGL.
       _module.args.gpuWrap = pkg: if isNixOS then pkg else config.lib.nixGL.wrap pkg;
+      # Пакеты с CUDA (blender, whisper-cpp) берём из nixpkgs с глобальным
+      # cudaSupport: ровно такие варианты лежат в cache.nixos-cuda.org. Точечный
+      # `.override { cudaSupport = true; }` даёт другой derivation и сборку
+      # из исходников на часы (Blender).
+      _module.args.pkgsCuda = import pkgs.path {
+        inherit (pkgs) system;
+        config = { allowUnfree = true; cudaSupport = true; };
+      };
     }
     (lib.mkIf (!isNixOS) {
       # Arch's fontconfig must discover the fonts installed by Home Manager.

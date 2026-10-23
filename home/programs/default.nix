@@ -1,4 +1,4 @@
-{ pkgs, config, gpuWrap, ... }:
+{ pkgs, config, gpuWrap, pkgsCuda, ... }:
 
 {
   imports = [
@@ -37,6 +37,8 @@
 
     # Media/Recording
     (gpuWrap obs-studio)
+    (gpuWrap losslesscut-bin)                                   # нарезка без перекодирования
+    (gpuWrap pkgsCuda.blender)                                  # 3D: Cycles на RTX, headless-рендер в claude-montage
 
     # Document Viewers & Engineering
     evince

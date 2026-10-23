@@ -96,6 +96,14 @@
       };
     };
 
+    # Тяжёлый ML для профиля монтажа, вне PATH агента: nix develop .#montage-ml
+    devShells.x86_64-linux.montage-ml = import ./home/ai/profiles/montage/ml-shell.nix {
+      pkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config = { allowUnfree = true; cudaSupport = true; };
+      };
+    };
+
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {
         system = "x86_64-linux";
