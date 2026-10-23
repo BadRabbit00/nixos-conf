@@ -6,7 +6,7 @@
 #   node-tools.nix Remotion, HyperFrames, Apify из npm-лока (node-tools/)
 #   banner.md      памятка про Nix, вшивается в каждый SKILL.md
 #   CLAUDE.md      Лилит-монтажёр
-#   blender.nix    скиллы Blender (35), MCP-сервер mcp-for-blender и аддон в ~/.config/blender
+#   blender.nix    скиллы Blender (35), MCP-сервер Blender Lab и его extension в ~/.config/blender
 #   ml-shell.nix   devShell montage-ml: whisperx, faster-whisper, uv для ACE-Step
 #                  (nix develop ~/nixos-conf#montage-ml), торч в PATH агента не кладём
 #

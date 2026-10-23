@@ -4,16 +4,10 @@
 #                                 запекание, риг, анимация, симуляция, экспорт, QA
 #   ifBars/blender-agent-studio   роутер + 12 специалистов (character-workflow,
 #                                 modeling, procedural, rendering, simulation…)
-#   ahujasid/mcp-for-blender      MCP «blender» (32k★, де-факто стандарт; у Blender
-#                                 Foundation своего MCP нет). Две половины:
-#                                 сервер mcp-for-blender (stdio, здесь из Nix) и
-#                                 аддон внутри Blender, который слушает :9876.
+#   Blender Lab blender_mcp       официальный MCP «blender» (см. ниже): сервер из
+#                                 Nix, extension в ~/.config/blender/5.2
 #
-# Аддон кладётся в ~/.config/blender/5.2/scripts/addons/blender_mcp.py (то же
-# имя, что у штатного установщика, чтобы сервер видел его как установленный)
-# и включается стартовым скриптом; сокет-сервер аддон поднимает сам
-# (blendermcp_auto_start_server). Blender сам — pkgsCuda.blender из
-# home/programs и из tools профиля.
+# Blender сам — pkgsCuda.blender из home/programs и из tools профиля.
 { lib, pkgs, pkgsCuda, ... }:
 
 let
@@ -33,25 +27,33 @@ let
     rev = "b9b714012858a73831f5e79df2bc1c80658e5dad";
     hash = "sha256-xyrtCbbIlj6l6kMSFopFOg3QSzRgHYiU2WBlTWscG6I=";
   };
+  # Официальный MCP от Blender Lab (projects.blender.org/lab/blender_mcp),
+  # коммит тот же, что пинит плагин Hermes Agent (v1.0.3). Две половины:
+  #   mcp/    сервер blender-mcp (stdio), здесь собран как python-приложение;
+  #           26 МБ RST-справки по API и мануалу едут внутрь пакета;
+  #   addon/  extension «mcp» (blender_version_min 5.1), слушает localhost:9876,
+  #           автостарт включён по умолчанию, но требует разрешённого online
+  #           access в настройках Blender — стартовый скрипт включает и то, и то.
   mcpSrc = pkgs.fetchgit {
-    url = "https://github.com/ahujasid/mcp-for-blender";
-    rev = "5a3618fccb2d982d0dd61e7a1879912c3100073b";
-    hash = "sha256-p1jtowSYjIuyy4c6k+NOMRZlpRbkEyjjdmU7bc3kPf4=";
+    url = "https://projects.blender.org/lab/blender_mcp.git";
+    rev = "2cea8d566dde07fbac28a61d698909d69724e853";
+    hash = "sha256-pYeByO4Oi5eyynsJhGVd1vBWXHvhGn+Y5LGit6Kazlw=";
   };
 
   mcpServer = pkgs.python3Packages.buildPythonApplication {
-    pname = "mcp-for-blender";
-    version = "2.2.2";
+    pname = "blender-mcp";
+    version = "1.0.3";
     src = mcpSrc;
+    sourceRoot = "${mcpSrc.name}/mcp";
     pyproject = true;
     build-system = [ pkgs.python3Packages.setuptools ];
-    dependencies = with pkgs.python3Packages; [ mcp httpx ];
-    doCheck = false; # тесты ждут живой Blender на :9876
+    dependencies = with pkgs.python3Packages; [ docutils pyyaml mcp ] ++ mcp.optional-dependencies.cli;
+    doCheck = false; # интеграционные тесты ждут живой Blender на :9876
     meta = {
-      description = "Blender integration through the Model Context Protocol";
-      homepage = "https://github.com/ahujasid/mcp-for-blender";
-      license = lib.licenses.mit;
-      mainProgram = "mcp-for-blender";
+      description = "Blender Lab MCP server: natural-language interface to the Python API and docs";
+      homepage = "https://www.blender.org/lab/mcp-server/";
+      license = lib.licenses.gpl3Plus;
+      mainProgram = "blender-mcp";
     };
   };
 
@@ -80,22 +82,30 @@ in
       type = "stdio";
       command = lib.getExe mcpServer;
       args = [ ];
-      env = { };
+      # *_for_cli-инструменты запускают сам Blender в фоне.
+      env.BLENDER_PATH = lib.getExe pkgsCuda.blender;
     };
 
-    tools = [ mcpServer ]; # ручная диагностика: mcp-for-blender --help
+    tools = [ mcpServer ]; # ручная диагностика: blender-mcp --help
   };
 
   home.file = {
-    "${blenderUser}/scripts/addons/blender_mcp.py".source = "${mcpSrc}/src/blender_mcp/bundled/addon.py";
+    # Extension целиком (каталог = id из blender_manifest.toml); репозиторий
+    # user_default Blender сканирует сам, остаётся только включить.
+    "${blenderUser}/extensions/user_default/mcp" = {
+      source = "${mcpSrc}/addon/blender_mcp_addon";
+      recursive = true;
+    };
     "${blenderUser}/scripts/startup/enable_blender_mcp.py".text = ''
-      # Включает аддон MCP for Blender при каждом старте; сам файл аддона — из Nix.
+      # Разрешает online access (без него extension MCP отказывается стартовать)
+      # и включает extension при каждом запуске; сам код аддона — из Nix.
       import bpy
 
       def _enable():
           try:
-              bpy.ops.preferences.addon_enable(module="blender_mcp")
-          except Exception as exc:  # noqa: BLE001 — Blender без UI или аддон уже включён
+              bpy.context.preferences.system.use_online_access = True
+              bpy.ops.preferences.addon_enable(module="bl_ext.user_default.mcp")
+          except Exception as exc:  # noqa: BLE001 — фоновый режим или уже включён
               print(f"enable_blender_mcp: {exc}")
           return None
 
