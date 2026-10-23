@@ -83,7 +83,7 @@ systemd.timers.my-job = { wantedBy = [ "timers.target" ]; timerConfig.OnCalendar
 
 ## Home Manager specifics
 
-- `home.file."path".source = ./file` for read-only config: the target becomes a store symlink. If the program **writes** to its own config (Claude's `settings.json`, Codex `config.toml`, Obsidian vault), do **not** own it with `home.file`; merge your part in `home.activation.<name> = lib.hm.dag.entryAfter [ "writeBoundary" ] "…"` with `jq`/`remarshal`, idempotently, like `home/programs/ai-mcp` and `home/programs/ecc` do.
+- `home.file."path".source = ./file` for read-only config: the target becomes a store symlink. If the program **writes** to its own config (Claude's `settings.json`, Codex `config.toml`, Obsidian vault), do **not** own it with `home.file`; merge your part in `home.activation.<name> = lib.hm.dag.entryAfter [ "writeBoundary" ] "…"` with `jq`/`remarshal`, idempotently, like `home/ai/mcp` and `home/ai/ecc` do.
 - `home.file."dir" = { source = drv; recursive = true; }` creates a real directory with per-file symlinks (agents that cannot follow a directory symlink need this).
 - `xdg.configFile."app/x"` for `~/.config`, `xdg.dataFile` for `~/.local/share`.
 - `programs.<x>.enable` modules exist for most tools; prefer them over raw files when they expose the option you need, otherwise `extraConfig`.

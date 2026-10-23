@@ -1,6 +1,6 @@
 # Nix-инструментарий для агентов: пять агентов, четырнадцать команд, шесть
 # скиллов-справочников (поиск, флейки, модули, упаковка, тесты, отладка) —
-# тот же формат и та же раскладка, что у ECC (home/programs/ecc), только
+# тот же формат и та же раскладка, что у ECC (home/ai/ecc), только
 # источник — этот каталог. В каждый файл после frontmatter вшита памятка про
 # Nix-доктрину: системная инструкция при большом контексте может выпасть, а
 # файл агента или скилла читается в момент вызова.
@@ -15,6 +15,8 @@
 { lib, pkgs, ... }:
 
 let
+  ai = import ../lib.nix { inherit lib pkgs; };
+
   # Модели для Codex и agy (Claude-модель и effort стоят в самих .md файлах).
   # Та же схема, что в ecc/default.nix: ревью и сборка — Astra, код — Sol 6.1,
   # минимум high; nix-reviewer и nix-build-resolver — xhigh (eval-ошибки Nix
@@ -93,12 +95,10 @@ let
 
   # Каталоги ~/.claude/skills и т.п. уже объявлены модулем ecc целиком, поэтому
   # здесь — поштучные записи; имена читаются из локальных папок (не IFD).
-  names = dir: builtins.attrNames (builtins.readDir dir);
-  skillNames = names ./skills;
-  agentNames = map (lib.removeSuffix ".md") (names ./agents);
-  commandNames = map (lib.removeSuffix ".md") (names ./commands);
-  recursive = path: { source = path; recursive = true; };
-  perSkill = root: sub: lib.listToAttrs (map (n: lib.nameValuePair "${root}/${n}" (recursive "${payload}/${sub}/${n}")) skillNames);
+  skillNames = ai.dirNames ./skills;
+  agentNames = ai.mdNames ./agents;
+  commandNames = ai.mdNames ./commands;
+  inherit (ai) roots;
 in
 {
   # Справочник nix-toolkit зовёт их по имени; всё остальное — через nix shell.
@@ -118,11 +118,11 @@ in
   ];
 
   home.file =
-    perSkill ".claude/skills" "claude/skills"
-    // perSkill ".codex/skills" "codex/skills"
-    // lib.listToAttrs (map (n: lib.nameValuePair ".claude/agents/${n}.md" { source = "${payload}/claude/agents/${n}.md"; }) agentNames)
-    // lib.listToAttrs (map (n: lib.nameValuePair ".claude/commands/${n}.md" { source = "${payload}/claude/commands/${n}.md"; }) commandNames)
-    // lib.listToAttrs (map (n: lib.nameValuePair ".codex/prompts/${n}.md" { source = "${payload}/codex/prompts/${n}.md"; }) commandNames)
-    // lib.listToAttrs (map (n: lib.nameValuePair ".codex/agents/${n}.toml" { source = "${payload}/codex/agents/${n}.toml"; }) agentNames)
-    // lib.listToAttrs (map (n: lib.nameValuePair ".gemini/config/agents/${n}.md" { source = "${payload}/agy/agents/${n}.md"; }) agentNames);
+    ai.perName { dst = "${roots.claude}/skills";   src = "${payload}/claude/skills";   names = skillNames;   recursiveDirs = true; }
+    // ai.perName { dst = "${roots.codex}/skills";    src = "${payload}/codex/skills";    names = skillNames;   recursiveDirs = true; }
+    // ai.perName { dst = "${roots.claude}/agents";   src = "${payload}/claude/agents";   names = agentNames;   ext = ".md"; }
+    // ai.perName { dst = "${roots.claude}/commands"; src = "${payload}/claude/commands"; names = commandNames; ext = ".md"; }
+    // ai.perName { dst = "${roots.codex}/prompts";   src = "${payload}/codex/prompts";   names = commandNames; ext = ".md"; }
+    // ai.perName { dst = "${roots.codex}/agents";    src = "${payload}/codex/agents";    names = agentNames;   ext = ".toml"; }
+    // ai.perName { dst = "${roots.agy}/agents";      src = "${payload}/agy/agents";      names = agentNames;   ext = ".md"; };
 }

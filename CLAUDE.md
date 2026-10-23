@@ -49,8 +49,9 @@ Navigation uses the `SUPER` (Win) key with standard arrow keys:
 | `home/desktop/niri/` | Core window manager logic and keybindings. |
 | `home/desktop/waybar/` | "Mechabar" styling and integrated scripts. |
 | `modules/core/` | System-wide service configurations (Audio, Nvidia, etc.). |
-| `home/programs/ai-skills/` | Third-party SKILL.md skills for claude, codex and agy, each pinned by rev/hash with Nix-wrapped scripts. |
-| `home/programs/ecc/` | ECC (Everything Claude Code): skills, agents, commands, rules and the hook runtime for claude and codex. Module selection, excluded skills and hook env live at the top of `default.nix`; `ecc-run`/`ecc-hook` are the only entry points; hooks are merged into `~/.claude/settings.json` by `ecc-sync`. |
+| `home/ai/` | Coding agents (claude-code, codex, agy): `lib.nix` (agent roots, file fan-out, JSON/TOML merge), `profiles.nix` + `profiles/{code,montage}` (separate `CLAUDE_CONFIG_DIR` homes: `claude` for code with ECC, `claude-montage` for video editing with 193 pinned skills, ffmpeg/whisper/remotion/hyperframes/blender in its PATH only, heavy ML in `nix develop .#montage-ml`), `mcp/`, `ask-models/`, `nix-toolkit/`, `gemini/`. |
+| `home/ai/skills/` | Third-party SKILL.md skills for claude, codex and agy, each pinned by rev/hash with Nix-wrapped scripts. |
+| `home/ai/ecc/` | ECC (Everything Claude Code) for the `code` profile: skills, agents, commands, rules and the hook runtime for claude and codex. `runtime.nix` (store tree, `ecc-run`/`ecc-hook`), `payload.nix` (module selection, excluded skills, agent models, Nix-rewritten docs), `default.nix` (layout + sync); `ecc-run`/`ecc-hook` are the only entry points; hooks are merged into `~/.claude/settings.json` by `ecc-sync`. |
 | `setup.sh` | Utility script for initial deployment and renaming. |
 
 ## ⚙️ Development Conventions

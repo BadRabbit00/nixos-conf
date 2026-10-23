@@ -5,11 +5,6 @@
     ./neovim/default.nix
     ./obsidian/default.nix
     ./zathura/default.nix
-    ./ai-mcp/default.nix
-    ./ai-skills/default.nix
-    ./ecc/default.nix
-    ./nix-toolkit/default.nix
-    ./ask-models/default.nix
   ];
 
   home.packages = with pkgs; [
@@ -20,9 +15,6 @@
     # Editors
     (gpuWrap vscode)
     (gpuWrap antigravity-ide)
-    antigravity-cli
-    claude-code
-    codex        # OpenAI Codex CLI coding agent
 
     # File Manager
     thunar
@@ -57,22 +49,6 @@
     # mangohud — устанавливается системно в modules/core/gaming.nix (убран дубль).
   ];
 
-  # --- Gemini CLI Configuration ---
-  # Пробрасываем файлы конфигурации gemini-cli
-  xdg.configFile."gemini/settings.json".source = ./gemini/settings.json;
-  xdg.configFile."gemini/trustedFolders.json".source = ./gemini/trustedFolders.json;
-  xdg.configFile."gemini/state.json".source = ./gemini/state.json;
-  xdg.configFile."gemini/GEMINI.md".source = ./gemini/GEMINI.md;
-
-  # ВАЖНО: Секреты (CONTEXT7_API_KEY, GITHUB_TOKEN) должны быть в твоем
-  # системном окружении или управляться через sops-nix / git-crypt.
-  # Я убрала их отсюда, чтобы не слить в репозиторий.
-
-  # --- Claude Code Configuration ---
-  # Глобальный system-prompt/персонаж для claude-code (~/.claude/CLAUDE.md),
-  # перенесен из gemini-cli. Живет в отдельном каталоге, а не в xdg.configFile,
-  # т.к. Claude Code хранит user-конфиг в $HOME/.claude, а не $XDG_CONFIG_HOME.
-  home.file.".claude/CLAUDE.md".source = ./claude-code/CLAUDE.md;
 
   # --- Btop Configuration ---
   programs.btop = {

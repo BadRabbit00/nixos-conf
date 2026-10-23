@@ -5,7 +5,7 @@ description: "Map of the Nix tool ecosystem and the exact command for each job: 
 
 # Nix toolkit: which tool for which job
 
-All tools below are either part of `nix` itself or available as `nix shell nixpkgs#<tool> -c <tool> …`. On this machine the lint/format/inspect set is already in `home.packages` (see `home/programs/nix-toolkit/default.nix`).
+All tools below are either part of `nix` itself or available as `nix shell nixpkgs#<tool> -c <tool> …`. On this machine the lint/format/inspect set is already in `home.packages` (see `home/ai/nix-toolkit/default.nix`).
 
 ## Search and discover
 

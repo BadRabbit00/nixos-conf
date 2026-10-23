@@ -16,6 +16,7 @@
 { lib, pkgs, ... }:
 
 let
+  ai = import ../lib.nix { inherit lib pkgs; };
   reportDir = ''"''${ASK_MODELS_DIR:-$HOME/.local/state/ask-models}"'';
 
   # Разбор аргументов, промпт из файла / слов / stdin, путь отчёта, шапка.
@@ -116,8 +117,8 @@ let
     (agyTool   { name = "write-argon"; mode = "write"; model = "gemini-4-argon-high";   effort = "high"; })
   ];
 
-  banner = ../nix-toolkit/banner.md;
-  commandNames = map (lib.removeSuffix ".md") (builtins.attrNames (builtins.readDir ./commands));
+  inherit (ai) banner roots;
+  commandNames = ai.mdNames ./commands;
   codexNames = builtins.filter (n: !(lib.hasSuffix "astra" n)) commandNames;
   commands = pkgs.runCommand "ask-models-commands" { nativeBuildInputs = [ pkgs.gawk ]; } ''
     mkdir -p "$out"/claude "$out"/codex
@@ -138,6 +139,6 @@ in
   home.packages = tools;
 
   home.file =
-    lib.listToAttrs (map (n: lib.nameValuePair ".claude/commands/${n}.md" { source = "${commands}/claude/${n}.md"; }) commandNames)
-    // lib.listToAttrs (map (n: lib.nameValuePair ".codex/prompts/${n}.md" { source = "${commands}/codex/${n}.md"; }) codexNames);
+    ai.perName { dst = "${roots.claude}/commands"; src = "${commands}/claude"; names = commandNames; ext = ".md"; }
+    // ai.perName { dst = "${roots.codex}/prompts"; src = "${commands}/codex"; names = codexNames; ext = ".md"; };
 }

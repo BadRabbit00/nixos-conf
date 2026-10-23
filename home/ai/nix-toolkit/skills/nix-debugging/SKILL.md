@@ -35,7 +35,7 @@ Interactive: `nix repl` → `:lf .` → `:p nixosConfigurations.badrabbitpc.conf
 | `command not found` inside build | missing `nativeBuildInputs`; for `#!/usr/bin/env` shebangs run `patchShebangs`. |
 | `/usr/bin/env: No such file`, `HOME` not writable | sandbox. `patchShebangs`, `export HOME=$TMPDIR` in the phase. |
 | network access during build (`Could not resolve host`) | the build downloads (npm, pip, cargo). Use the lockfile builders (`buildNpmPackage`, `importNpmLock`, `cargoHash`, uv2nix) so fetching is a fixed-output step. |
-| `EOVERRIDE` / `ENOTCACHED` with importNpmLock | `overrides`/`devDependencies` in package.json conflict with the rewritten lock; feed a trimmed `package` and prod-only `packageLock` (see `home/programs/ecc/default.nix`). |
+| `EOVERRIDE` / `ENOTCACHED` with importNpmLock | `overrides`/`devDependencies` in package.json conflict with the rewritten lock; feed a trimmed `package` and prod-only `packageLock` (see `home/ai/ecc/default.nix`). |
 | `RPATH of binary … contains a forbidden reference to /build` | a path to `$TMPDIR` baked into the output; move the file into `$out` and reference that. |
 | tests fail only in sandbox | time zone, locale, `HOME`, `/dev/kvm`, no network. Skip those specific tests with a named comment. |
 | build takes forever / machine swapping | you forgot `--max-jobs 4 --cores 4`; check `nix build --dry-run` for a monster (chromium, LLVM, CUDA) that should come from a substituter: `nix show-config | grep substituters`. |

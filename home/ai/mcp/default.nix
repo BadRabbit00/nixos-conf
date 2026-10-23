@@ -11,6 +11,8 @@
 { config, lib, pkgs, inputs, isNixOS ? true, ... }:
 
 let
+  ai = import ../lib.nix { inherit lib pkgs; };
+
   # В nixpkgs graphify собран голым: сам graphify-mcp есть, а питоновской
   # либы mcp нет — сервер падает с ModuleNotFoundError на первом же запуске.
   # Доливаем ровно один экстра, без остального обвеса.
@@ -44,7 +46,7 @@ let
   json = (pkgs.formats.json { }).generate;
 
   # Одни и те же серверы, две разные анатомии конфигов.
-  claudeFrag = json "mcp-claude.json" {
+  claudeServers = {
     graphify = {
       type = "stdio";
       command = "${graphify}/bin/graphify-mcp";
@@ -85,56 +87,29 @@ let
   # Оба агента пишут свои конфиги сами: claude складывает туда кэши и счётчики,
   # codex — trust_level проектов. Владеть такими файлами через home.file значит
   # подсунуть агенту симлинк в стор и сломать ему запись. Поэтому не владеем, а
-  # вливаем свой кусок и оставляем чужие ключи нетронутыми.
+  # вливаем свой кусок (ai.mergeJson / ai.mergeToml), чужие ключи не трогаем.
   sync = pkgs.writeShellApplication {
     name = "ai-mcp-sync";
-    runtimeInputs = [ pkgs.jq pkgs.remarshal pkgs.coreutils ];
+    runtimeInputs = ai.mergeInputs;
     text = ''
       # shellcheck disable=SC2016  # jq-выражения обязаны быть в одинарных кавычках
-
-      claude="$HOME/.claude.json"
-      codex="$HOME/.codex/config.toml"
-      agy="$HOME/.gemini/config/mcp_config.json"
-
-      # --- Claude Code -------------------------------------------------------
-      # Пользовательские MCP живут именно в ~/.claude.json (проверено: сам
-      # `claude mcp add --scope user` пишет туда), а не в settings.json.
-      # Проверка -s, а не -f: агенты оставляют файл нулевой длины, а jq на
-      # пустом входе падает с "Unexpected end of input".
-      [ -s "$claude" ] || printf '{}\n' > "$claude"
-      tmp="$(mktemp "$claude.XXXXXX")"
-      jq --slurpfile ours ${claudeFrag} \
-         '.mcpServers = ((.mcpServers // {}) + $ours[0])' "$claude" > "$tmp"
-      mv -f "$tmp" "$claude"
-
-      # --- Codex -------------------------------------------------------------
-      # TOML -> JSON -> слияние -> TOML. Круговой прогон теряет комментарии,
-      # поэтому свои заметки в config.toml не пиши — переживут только значения.
-      mkdir -p "$(dirname "$codex")"
-      [ -f "$codex" ] || : > "$codex"
-      tmp="$(mktemp "$codex.XXXXXX")"
-      remarshal -if toml -of json < "$codex" \
-        | jq --slurpfile ours ${codexFrag} \
-             '.mcp_servers = ((.mcp_servers // {}) + $ours[0])' \
-        | remarshal -if json -of toml > "$tmp"
-      mv -f "$tmp" "$codex"
-
-      # --- Antigravity CLI (agy) ---------------------------------------------
-      # Путь выдран из самого бинаря (он стрипнут, но строка на месте): agy
-      # читает глобальные MCP именно отсюда, а НЕ из ~/.gemini/antigravity-cli/
-      # рядом с settings.json и не из ~/.gemini/antigravity/ (то — конфиг IDE).
-      mkdir -p "$(dirname "$agy")"
-      [ -s "$agy" ] || printf '{}\n' > "$agy"
-      tmp="$(mktemp "$agy.XXXXXX")"
-      jq --slurpfile ours ${agyFrag} \
-         '.mcpServers = ((.mcpServers // {}) + $ours[0])' "$agy" > "$tmp"
-      mv -f "$tmp" "$agy"
-
-      echo "MCP разложены: graphify, zep, context7 -> claude + codex; colab -> agy"
+      # Codex: config.toml, комментарии в нём не переживают прогон.
+      ${ai.mergeToml { file = ''"$HOME/${ai.roots.codex}/config.toml"''; frag = codexFrag;
+                       expr = ".mcp_servers = ((.mcp_servers // {}) + $ours[0])"; }}
+      # Antigravity CLI: путь выдран из бинаря (стрипнут, но строка на месте),
+      # agy читает глобальные MCP отсюда, а НЕ из ~/.gemini/antigravity-cli/
+      # рядом с settings.json и не из ~/.gemini/antigravity/ (конфиг IDE).
+      ${ai.mergeJson { file = ''"$HOME/${ai.roots.agy}/mcp_config.json"''; frag = agyFrag;
+                       expr = ".mcpServers = ((.mcpServers // {}) + $ours[0])"; }}
+      echo "MCP разложены: graphify, zep, context7 -> codex; colab -> agy (claude — через ai-profiles-sync)"
     '';
   };
 in
 {
+  # Claude получает те же серверы через профиль code (../profiles.nix):
+  # вливаются в ~/.claude.json скриптом ai-profiles-sync.
+  ai.profiles.code.mcp = claudeServers;
+
   home.packages = [
     graphify # сам CLI: без `graphify extract` графа не существует
     colab    # тот же бинарь, что прописан agy — удобно дёрнуть для диагностики

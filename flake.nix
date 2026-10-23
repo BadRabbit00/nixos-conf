@@ -21,7 +21,7 @@
     };
 
     # --- uv2nix: питон-локи -> нативные деривации ---------------------------
-    # Нужны, чтобы colab-mcp (home/programs/ai-mcp/colab-mcp.nix) собирался из
+    # Нужны, чтобы colab-mcp (home/ai/mcp/colab-mcp.nix) собирался из
     # своего uv.lock целиком в /nix/store, а не резолвил зависимости через uv в
     # рантайме. Тройка ходит комплектом: pyproject-nix — базовые примитивы,
     # uv2nix — читатель lock-файлов, build-system-pkgs — сами build-backends

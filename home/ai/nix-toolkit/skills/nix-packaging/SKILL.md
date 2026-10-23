@@ -50,10 +50,10 @@ Phases: `unpack → patch → configure → build → check → install → fixu
 
 | Ecosystem | Builder | Notes |
 |---|---|---|
-| Node (npm lock) | `pkgs.buildNpmPackage { npmDepsHash = "…"; }` or `pkgs.importNpmLock.buildNodeModules { npmRoot = src; nodejs; }` | importNpmLock needs no hash but reads the lock at eval (IFD-like); strip `devDependencies`/`overrides` when npm complains (see `home/programs/ecc`) |
+| Node (npm lock) | `pkgs.buildNpmPackage { npmDepsHash = "…"; }` or `pkgs.importNpmLock.buildNodeModules { npmRoot = src; nodejs; }` | importNpmLock needs no hash but reads the lock at eval (IFD-like); strip `devDependencies`/`overrides` when npm complains (see `home/ai/ecc`) |
 | Node (pnpm) | `pnpm.fetchDeps { hash }` + `pnpmConfigHook` | |
 | Python app | `python3.pkgs.buildPythonApplication { pyproject = true; build-system = [ hatchling ]; dependencies = [ … ]; }` | tests via `nativeCheckInputs = [ pytestCheckHook ]` |
-| Python with lockfile | uv2nix / pyproject.nix (`workspace.loadWorkspace`, `mkPyprojectOverlay`) | exact wheels from `uv.lock`; this repo uses it in `home/programs/ai-mcp/colab-mcp.nix` |
+| Python with lockfile | uv2nix / pyproject.nix (`workspace.loadWorkspace`, `mkPyprojectOverlay`) | exact wheels from `uv.lock`; this repo uses it in `home/ai/mcp/colab-mcp.nix` |
 | Python env for scripts | `python3.withPackages (ps: [ ps.requests ])` | for wrappers and devShells |
 | Rust | `rustPlatform.buildRustPackage { cargoHash = "…"; }` or `cargoLock.lockFile = ./Cargo.lock` | `useFetchCargoVendor = true` on new nixpkgs |
 | Go | `buildGoModule { vendorHash = "…"; }` | `vendorHash = null` when vendored |
