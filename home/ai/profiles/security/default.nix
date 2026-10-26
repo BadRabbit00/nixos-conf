@@ -39,15 +39,15 @@ let
     syft
     grype
     pip-audit
-    cargo-audit
-    nodejs             # npm audit; сам проект — из своего devShell
+    cargo-audit        # `cargo-audit audit`: cargo в PATH не нужен
+    # npm audit — из devShell проекта: свой nodejs здесь перекрыл бы проектный
     # DAST / API
     zap                # OWASP ZAP, headless: zap -cmd -autorun zap.yaml
     schemathesis       # st run <openapi.json>
   ];
 
-  # Модель по умолчанию; /model и --model в сессии сильнее. Ключи, которые
-  # agy уже записал сам, не перетираем.
+  # Модель при первом запуске (seed). Потом ключ — выбор пользователя:
+  # /model и --model сильнее, ребилд его не перетирает.
   settingsFrag = (pkgs.formats.json { }).generate "agy-sec-settings.json" {
     model = "Gemini 4 Argon (High)";
   };
@@ -58,9 +58,23 @@ let
       "$typeName" = "exa.cascade_plugins_pb.CascadePluginCommandTemplate";
       command = "${pkgs.semgrep}/bin/semgrep";
       args = [ "mcp" "--transport" "stdio" ];
-      env.SEMGREP_SEND_METRICS = "off";
+      # `semgrep mcp` сам включает OTel-трейсинг на сервер Semgrep (git user,
+      # имя репо, ветка) — для клиентских репо это утечка. Без токена
+      # semgrep_scan / findings / supply_chain всё равно падают (auto-конфиг при
+      # выключенных метриках), поэтому выключены: сканы — через CLI с p/…
+      env = {
+        SEMGREP_SEND_METRICS = "off";
+        SEMGREP_MCP_DISABLE_TRACING = "true";
+        SEMGREP_ENABLE_VERSION_CHECK = "0";
+        SEMGREP_SCAN_DISABLED = "true";
+        SEMGREP_FINDINGS_DISABLED = "true";
+        SEMGREP_SCAN_SUPPLY_CHAIN_DISABLED = "true";
+      };
     };
   };
+
+  # pip_api зовёт `python -m pip`; у голого python3 из closure pip-audit pip нет.
+  pyWithPip = pkgs.python3.withPackages (ps: [ ps.pip ]);
 
   sync = pkgs.writeShellApplication {
     name = "agy-sec-sync";
@@ -79,17 +93,23 @@ let
     name = "agy-sec";
     runtimeInputs = [ pkgs.antigravity-cli runtime.run ] ++ tools;
     text = ''
-      real="$HOME"
+      # Настоящий дом запоминаем: agy-sec, запущенный изнутри agy-sec, не должен
+      # уйти в ~/.agy-security/.agy-security.
+      real="''${AGY_SEC_REAL_HOME:-$HOME}"
+      export AGY_SEC_REAL_HOME="$real"
       prof="$real/${dir}"
       export XDG_CONFIG_HOME="''${XDG_CONFIG_HOME:-$real/.config}"
       export XDG_CACHE_HOME="''${XDG_CACHE_HOME:-$real/.cache}"
       export XDG_DATA_HOME="''${XDG_DATA_HOME:-$real/.local/share}"
       export XDG_STATE_HOME="''${XDG_STATE_HOME:-$real/.local/state}"
       export SEMGREP_SEND_METRICS="''${SEMGREP_SEND_METRICS:-off}"
+      export PIPAPI_PYTHON_LOCATION="''${PIPAPI_PYTHON_LOCATION:-${pyWithPip}/bin/python3}"
       # Логин общий с основным agy. Если agy однажды заменит ссылку своим
       # файлом (обновил токен через rename), это уже валидный токен профиля.
+      # Без -f: настоящий токен не перетираем; || true — гонка двух первых запусков.
       mkdir -p "$prof/$(dirname ${token})"
-      [ -e "$prof/${token}" ] || [ -L "$prof/${token}" ] || ln -s "$real/${token}" "$prof/${token}"
+      chmod 700 "$prof" # в логах бесед — вывод сканеров
+      [ -e "$prof/${token}" ] || [ -L "$prof/${token}" ] || ln -s "$real/${token}" "$prof/${token}" || true
       export HOME="$prof"
       exec agy "$@"
     '';
