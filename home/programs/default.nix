@@ -1,5 +1,9 @@
-{ pkgs, config, gpuWrap, pkgsCuda, ... }:
+{ lib, pkgs, config, gpuWrap, pkgsCuda, ... }:
 
+let
+  # Тот же npm-лок, что у профиля montage: обёртка tripo одна на всю систему.
+  montageNodeTools = import ../ai/profiles/montage/node-tools.nix { inherit lib pkgs; };
+in
 {
   imports = [
     ./neovim/default.nix
@@ -40,6 +44,7 @@
     (gpuWrap obs-studio)
     (gpuWrap losslesscut-bin)                                   # нарезка без перекодирования
     (gpuWrap pkgsCuda.blender)                                  # 3D: Cycles на RTX, headless-рендер в claude-montage
+    montageNodeTools.tripo                                      # Tripo CLI в общем PATH: логин с браузером идёт отсюда
 
     # Document Viewers & Engineering
     evince

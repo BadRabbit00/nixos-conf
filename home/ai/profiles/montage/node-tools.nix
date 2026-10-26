@@ -1,6 +1,7 @@
 # CLI-инструменты из npm для профиля montage: Remotion (видео из React/TS),
-# HyperFrames (видео из HTML, рендер детерминированный по кадрам) и Apify
-# (скрейпинг/акторы). В nixpkgs их нет, поэтому — тот же приём, что у ECC:
+# HyperFrames (видео из HTML, рендер детерминированный по кадрам), Apify
+# (скрейпинг/акторы) и Tripo CLI (текст/картинка → 3D через Tripo V3 API,
+# логин: tripo auth login, проверка: tripo doctor). В nixpkgs их нет, поэтому — тот же приём, что у ECC:
 # package.json + package-lock.json лежат в репо, importNpmLock собирает
 # node_modules в сторе, наружу торчат только обёртки.
 #
@@ -59,8 +60,14 @@ let
     runtimeInputs = [ nodejs ];
     text = ''exec node ${nm}/apify-cli/dist/apify.js "$@"'';
   };
+
+  tripo = pkgs.writeShellApplication {
+    name = "tripo";
+    runtimeInputs = [ nodejs ];
+    text = ''exec node ${nm}/tripo-cli/dist/cli.js "$@"'';
+  };
 in
 {
-  inherit nodeModules hyperframes remotion apify;
-  all = [ hyperframes remotion apify ];
+  inherit nodeModules hyperframes remotion apify tripo;
+  all = [ hyperframes remotion apify tripo ];
 }

@@ -3,7 +3,7 @@
 # инструменты — только про видео. Логин отдельный: первый запуск попросит /login.
 #
 #   skills.nix     скиллы из 26 репозиториев, запинены по rev/hash
-#   node-tools.nix Remotion, HyperFrames, Apify из npm-лока (node-tools/)
+#   node-tools.nix Remotion, HyperFrames, Apify, Tripo CLI из npm-лока (node-tools/)
 #   banner.md      памятка про Nix, вшивается в каждый SKILL.md
 #   CLAUDE.md      Лилит-монтажёр
 #   blender.nix    скиллы Blender (35), MCP-сервер Blender Lab и его extension в ~/.config/blender
@@ -66,7 +66,7 @@ in
       pkgs.nodejs
       pkgs.manim
       python
-    ] ++ nodeTools.all;     # remotion, hyperframes, apify
+    ] ++ nodeTools.all;     # remotion, hyperframes, apify, tripo
 
     env = {
       # python-playwright (pixel2motion, claude-video) берёт браузеры из стора,

@@ -6,6 +6,10 @@
 #                                 modeling, procedural, rendering, simulation…)
 #   Blender Lab blender_mcp       официальный MCP «blender» (см. ниже): сервер из
 #                                 Nix, extension в ~/.config/blender/5.2
+#   saturday06/VRM-Addon          extension «vrm» (MIT/GPL): импорт, экспорт и
+#                                 правка VRM 0.x/1.0, релизный zip с extensions.blender.org
+#   ksami/QRemeshify              extension «qremeshify» (GPL-3): квад-ретопология на
+#                                 QuadWild + Bi-MDF, два .so через ctypes, autoPatchelf
 #
 # Blender сам — pkgsCuda.blender из home/programs и из tools профиля.
 { lib, pkgs, pkgsCuda, ... }:
@@ -57,6 +61,46 @@ let
     };
   };
 
+  # Релизный zip extension-варианта: манифест в корне архива, без wheels.
+  vrmSrc = pkgs.fetchzip {
+    url = "https://github.com/saturday06/VRM-Addon-for-Blender/releases/download/v4.10.2/VRM_Addon_for_Blender-Extension-4_10_2.zip";
+    hash = "sha256-TRwLVYu7k+6CGryv6ZzDmaMtBVypjuuSnxiWgr2jT6Y=";
+    stripRoot = false;
+  };
+
+  # Linux-сборка QRemeshify: чистый Python плюс liblib_quadwild.so и
+  # liblib_quadpatches.so, которые грузятся через ctypes и хотят только
+  # libstdc++/libgcc_s/libc. autoPatchelf прописывает им RUNPATH на stdenv.cc.cc.lib,
+  # чтобы загрузка не зависела от того, что уже успел подгрузить сам Blender.
+  qremeshifySrc = pkgs.stdenv.mkDerivation {
+    pname = "qremeshify-blender-extension";
+    version = "1.1.0";
+    src = pkgs.fetchzip {
+      url = "https://github.com/ksami/QRemeshify/releases/download/1.1.0/QRemeshify-1.1.0-linux.zip";
+      hash = "sha256-hMyHfdEANeIUdIOTLi6fxmb9XhDI0A+MhSkeOYxRNuA=";
+    };
+    nativeBuildInputs = [ pkgs.autoPatchelfHook ];
+    buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+    dontConfigure = true;
+    dontBuild = true;
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out
+      cp -r . $out/
+      rm -rf $out/__pycache__
+      runHook postInstall
+    '';
+    meta = {
+      description = "QRemeshify: quad remesher for Blender built on QuadWild Bi-MDF";
+      homepage = "https://github.com/ksami/QRemeshify";
+      license = lib.licenses.gpl3Plus;
+      platforms = [ "x86_64-linux" ];
+    };
+  };
+
+  # Extensions из Nix в репозитории user_default; стартовый скрипт включает их.
+  nixExtensions = [ "mcp" "vrm" "qremeshify" ];
+
   blenderMajorMinor = lib.versions.majorMinor pkgsCuda.blender.version; # "5.2"
   blenderUser = ".config/blender/${blenderMajorMinor}";
 in
@@ -96,20 +140,39 @@ in
       source = "${mcpSrc}/addon/blender_mcp_addon";
       recursive = true;
     };
+    "${blenderUser}/extensions/user_default/vrm" = {
+      source = vrmSrc;
+      recursive = true;
+    };
+    "${blenderUser}/extensions/user_default/qremeshify" = {
+      source = qremeshifySrc;
+      recursive = true;
+    };
     "${blenderUser}/scripts/startup/enable_blender_mcp.py".text = ''
       # Разрешает online access (без него extension MCP отказывается стартовать)
-      # и включает extension при каждом запуске; сам код аддона — из Nix.
+      # и включает extensions из Nix при каждом запуске; сам код аддонов — из Nix.
+      # Blender 5.x требует register/unregister у startup-скриптов.
       import bpy
+
+      NIX_EXTENSIONS = ${builtins.toJSON nixExtensions}
 
       def _enable():
           try:
               bpy.context.preferences.system.use_online_access = True
-              bpy.ops.preferences.addon_enable(module="bl_ext.user_default.mcp")
-          except Exception as exc:  # noqa: BLE001 — фоновый режим или уже включён
-              print(f"enable_blender_mcp: {exc}")
+          except Exception as exc:  # noqa: BLE001 — фоновый режим
+              print(f"enable_blender_mcp: online access: {exc}")
+          for ext in NIX_EXTENSIONS:
+              try:
+                  bpy.ops.preferences.addon_enable(module=f"bl_ext.user_default.{ext}")
+              except Exception as exc:  # noqa: BLE001 — уже включён или нет репозитория
+                  print(f"enable_blender_mcp: {ext}: {exc}")
           return None
 
-      bpy.app.timers.register(_enable, first_interval=0.5)
+      def register():
+          bpy.app.timers.register(_enable, first_interval=0.5)
+
+      def unregister():
+          pass
     '';
   };
 }
