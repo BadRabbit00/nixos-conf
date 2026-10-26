@@ -8,6 +8,7 @@
 #   ask-models/  обёртки ask-*/write-* для чужих моделей и их команды
 #   profiles.nix профили Claude Code (CLAUDE_CONFIG_DIR): каталог, обёртка, CLAUDE.md, скиллы, MCP
 #   profiles/    code (обычный ~/.claude, Лилит + ECC) и montage (~/.claude-montage, claude-montage)
+#                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + ECC
 #   gemini/      файлы gemini-cli (~/.config/gemini)
 #   lib.nix      общий инвентарь: корни агентов, fan-out файлов, слияние JSON/TOML
 #
@@ -20,6 +21,7 @@
     ./profiles.nix
     ./profiles/code/default.nix
     ./profiles/montage/default.nix
+    ./profiles/security/default.nix
     ./mcp/default.nix
     ./skills/default.nix
     ./ecc/default.nix
