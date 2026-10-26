@@ -57,7 +57,7 @@
 1. Секреты — gitleaks по истории, trufflehog без верификации.
 2. Зависимости — osv-scanner/trivy fs, плюс нативные аудиторы стека; SBOM через syft → grype.
 3. IaC и конфиги — trivy config.
-4. SAST — semgrep (через MCP или CLI), bandit для Python, sonar-scanner если есть сервер.
+4. SAST — semgrep (сканы через CLI, свои правила через MCP), bandit для Python, sonar-scanner если есть сервер.
 
 ### 4. Ручное ревью
 Сканеры не видят логику. Пройдись руками по горячим зонам из разведки: авторизация и IDOR, обработка ввода, десериализация, загрузка файлов, SSRF, криптография, обработка ошибок, логирование чувствительных данных. Для второго мнения можно вызвать агента `security-reviewer`.
@@ -85,16 +85,16 @@ ZAP baseline → при согласии active scan; schemathesis по схем
 
 | НАЗВАНИЕ | ОПИСАНИЕ | ЗАЧЕМ НУЖЕН | КАК ИСПОЛЬЗОВАТЬ |
 |---|---|---|---|
-| **semgrep (MCP)** | MCP-сервер semgrep: `semgrep_scan`, `semgrep_scan_with_custom_rule`, `semgrep_scan_supply_chain`, `semgrep_findings` и др. | SAST прямо из агента, удобно для точечных проверок и своих правил | Для файлов и фрагментов — `semgrep_scan`; для проверки гипотезы — `semgrep_scan_with_custom_rule` со своим YAML-правилом. `semgrep_findings` работает только с аккаунтом Semgrep AppSec — без него не вызывай |
+| **semgrep (MCP)** | MCP-сервер semgrep: `semgrep_scan_with_custom_rule`, `get_abstract_syntax_tree`, `semgrep_rule_schema`, `get_supported_languages` | Точечные проверки своими правилами прямо из агента | Для проверки гипотезы — `semgrep_scan_with_custom_rule` со своим YAML-правилом; AST и схема правил помогают это правило написать. `semgrep_scan`, `semgrep_findings` и `semgrep_scan_supply_chain` выключены: без токена Semgrep они не работают. Полные сканы — через CLI (строка ниже) |
 | **semgrep** | Статический анализатор по правилам, много языков | Основной SAST по всему репозиторию | `semgrep scan --config p/default --config p/secrets --metrics=off --sarif -o .audit/semgrep.sarif .` — `--config auto` с выключенными метриками не работает, используй наборы `p/*` |
 | **bandit** | SAST для Python | Типовые ошибки Python: `eval`, `pickle`, `subprocess` с `shell=True`, слабая крипта | `bandit -r . -ll -f json -o .audit/bandit.json` (`-ll` — от Medium и выше) |
-| **sonar-scanner** | Клиент SonarQube | Глубокий анализ качества и безопасности, если есть свой сервер | Только если Алексей дал сервер: `sonar-scanner -Dsonar.projectKey=<key> -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.token=$SONAR_TOKEN`. Нет сервера — пропускай |
+| **sonar-scanner** | Клиент SonarQube | Глубокий анализ качества и безопасности, если есть свой сервер | Только если Алексей дал сервер: `sonar-scanner -Dsonar.projectKey=<key> -Dsonar.host.url=$SONAR_HOST_URL`. Токен сканер читает сам из переменной `SONAR_TOKEN` — не передавай его через `-D`, иначе он виден в списке процессов. Нет сервера — пропускай |
 | **gitleaks** | Поиск секретов в файлах и git-истории | Ключи, токены и пароли, в том числе давно «удалённые» из кода, но живущие в истории | `gitleaks git . --redact --report-format json --report-path .audit/gitleaks.json`; без истории — `gitleaks dir .` |
-| **trufflehog** | Поиск секретов с возможностью проверки | Второе мнение по секретам и проверка, живой ли ключ | По умолчанию офлайн: `trufflehog git file://. --no-verification --json`. Верификация шлёт найденный ключ провайдеру — только с отдельного разрешения: `--results=verified` |
+| **trufflehog** | Поиск секретов с возможностью проверки | Второе мнение по секретам и проверка, живой ли ключ | Всегда с `--no-verification`: `trufflehog git file://. --no-verification --json`. Без этого флага trufflehog сам проверяет найденные ключи у провайдеров, то есть отправляет их в сеть. Верификацию включай только по отдельному разрешению: убери `--no-verification` (`--results=verified` лишь фильтрует вывод, проверку он не выключает) |
 | **trivy** | Универсальный сканер: уязвимости, мисконфиги, секреты, образы | SCA по lock-файлам, IaC (Terraform, K8s, Dockerfile), проверка контейнеров | `trivy fs --scanners vuln,misconfig,secret -f json -o .audit/trivy.json .`; IaC — `trivy config .`; образ — `trivy image <img>`. Первый запуск качает базу |
 | **osv-scanner** | SCA по базе OSV | Уязвимости зависимостей во всех экосистемах сразу | `osv-scanner scan source -r --format json --output .audit/osv.json .` |
-| **pip-audit** | SCA для Python | Уязвимые PyPI-пакеты | `pip-audit -r requirements.txt -f json -o .audit/pip-audit.json`; для poetry/uv сначала экспортируй requirements |
-| **cargo-audit** | SCA для Rust по RustSec | Уязвимые и отозванные крейты | `cargo audit --json > .audit/cargo-audit.json` (нужен `Cargo.lock`) |
+| **pip-audit** | SCA для Python | Уязвимые PyPI-пакеты | `pip-audit -r requirements.txt --no-deps --disable-pip -f json -o .audit/pip-audit.json` (если в файле есть хэши — добавь `--require-hashes`). Без `--no-deps --disable-pip` он ставит пакеты во временный venv и может исполнить код проекта. Для poetry/uv сначала экспортируй requirements с закреплёнными версиями |
+| **cargo-audit** | SCA для Rust по RustSec | Уязвимые и отозванные крейты | `cargo-audit audit --json > .audit/cargo-audit.json` (нужен `Cargo.lock`; cargo в профиле нет, поэтому не `cargo audit`) |
 | **npm audit** | SCA для Node.js | Уязвимые npm-пакеты | `npm audit --omit=dev --json > .audit/npm-audit.json` (нужен `package-lock.json`); без `--omit=dev` — чтобы увидеть и dev-зависимости |
 | **syft** | Генератор SBOM | Полный список компонентов проекта или образа — основа для SCA и комплаенса | `syft scan dir:. -o cyclonedx-json=.audit/sbom.cdx.json` |
 | **grype** | Сканер уязвимостей по SBOM | Проверка SBOM от syft на известные CVE | `grype sbom:.audit/sbom.cdx.json -o json --file .audit/grype.json` |
