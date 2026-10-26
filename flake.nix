@@ -51,6 +51,13 @@
       inputs.uv2nix.follows = "uv2nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Гейт безопасности для CI (sec-scan, promptfoo, sec-pytest): свой публичный
+    # репозиторий, его же копируемый workflow гоняют проекты без Nix.
+    badrabbit-sec-scan = {
+      url = "github:BadRabbit00/badrabbit-sec-scan";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, catppuccin, ... }@inputs:
@@ -82,6 +89,18 @@
     # HM uses Catppuccin packages directly, not catppuccin.* options.
     # The NixOS Catppuccin module remains a system-only import.
     sharedHomeModules = [ inputs.sops-nix.homeManagerModules.sops ];
+
+    # Набор ИБ-инструментов для devShell `security` (garak — на CUDA-торче,
+    # pkgsCuda с теми же настройками, что в home/generic-linux.nix).
+    secTools = import ./home/ai/profiles/security/tools.nix {
+      inherit (nixpkgs) lib;
+      inherit inputs;
+      pkgs = import nixpkgs { system = "x86_64-linux"; };
+      pkgsCuda = import nixpkgs {
+        system = "x86_64-linux";
+        config = { allowUnfree = true; cudaSupport = true; };
+      };
+    };
   in {
     nixosConfigurations = {
       badrabbitpc = nixpkgs.lib.nixosSystem {
@@ -116,6 +135,16 @@
         config = { allowUnfree = true; cudaSupport = true; };
       };
     };
+
+    # ИБ-инструменты вне профиля agy-sec, для claude/codex и рук:
+    #   nix develop ~/nixos-conf#security
+    # CI-гейт живёт отдельно: github:BadRabbit00/badrabbit-sec-scan.
+    devShells.x86_64-linux.security =
+      (import nixpkgs { system = "x86_64-linux"; }).mkShell {
+        name = "security";
+        packages = secTools.tools;
+        shellHook = ''echo "security: sec-scan, semgrep, gitleaks, trivy, promptfoo, garak, zap… (см. home/ai/profiles/security/GEMINI.md)"'';
+      };
 
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {

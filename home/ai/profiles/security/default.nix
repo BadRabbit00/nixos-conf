@@ -11,40 +11,31 @@
 # продолжают читать ~/.config и ~/.cache.
 #
 #   GEMINI.md          правила профиля и шпаргалка по инструментам
+#   tools.nix          набор инструментов (общий с devShell `security` во flake.nix)
+#   (sec-scan, promptfoo, sec-pytest — из github:BadRabbit00/badrabbit-sec-scan)
 #   schemathesis.nix   пакет (в nixpkgs нет), колёса с PyPI по sha256
-{ lib, pkgs, ... }:
+#   py/                Agent Scan, Cisco mcp-scanner, AgentDojo, garak: venv из uv.lock (uv2nix)
+#   skills/            свои sec-audit-* скиллы для agy (план аудита и гайды по инструментам)
+{ lib, pkgs, inputs, pkgsCuda, ... }:
 
 let
   ai = import ../../lib.nix { inherit lib pkgs; };
   # Тот же payload, что раскладывает ../../ecc: одинаковый вызов — одна деривация.
   runtime = import ../../ecc/runtime.nix { inherit lib pkgs; };
   payload = import ../../ecc/payload.nix { inherit lib pkgs runtime; };
-  schemathesis = pkgs.callPackage ./schemathesis.nix { };
+  secTools = import ./tools.nix { inherit lib pkgs inputs pkgsCuda; };
+  inherit (secTools) tools;
 
   dir = ".agy-security";
   gemini = "${dir}/.gemini";
   token = ".gemini/antigravity-cli/antigravity-oauth-token";
 
-  tools = with pkgs; [
-    # SAST
-    semgrep            # semgrep scan; `semgrep mcp` — MCP-сервер ниже
-    bandit             # Python AST
-    sonar-scanner-cli  # sonar-scanner, нужен свой SonarQube
-    # секреты
-    gitleaks
-    trufflehog
-    # зависимости, контейнеры, SBOM
-    trivy
-    osv-scanner
-    syft
-    grype
-    pip-audit
-    cargo-audit        # `cargo-audit audit`: cargo в PATH не нужен
-    # npm audit — из devShell проекта: свой nodejs здесь перекрыл бы проектный
-    # DAST / API
-    zap                # OWASP ZAP, headless: zap -cmd -autorun zap.yaml
-    schemathesis       # st run <openapi.json>
-  ];
+  # Свои sec-audit-* скиллы рядом с ECC. ECC-каталог смонтирован recursive, так
+  # что соседние каталоги-скиллы не конфликтуют. Имена читаются из ./skills.
+  secSkills = ai.dirNames ./skills;
+  secSkillFiles = lib.listToAttrs (map
+    (n: lib.nameValuePair "${gemini}/config/skills/${n}" (ai.recursive (./skills + "/${n}")))
+    secSkills);
 
   # Модель при первом запуске (seed). Потом ключ — выбор пользователя:
   # /model и --model сильнее, ребилд его не перетирает.
@@ -73,8 +64,6 @@ let
     };
   };
 
-  # pip_api зовёт `python -m pip`; у голого python3 из closure pip-audit pip нет.
-  pyWithPip = pkgs.python3.withPackages (ps: [ ps.pip ]);
 
   sync = pkgs.writeShellApplication {
     name = "agy-sec-sync";
@@ -103,7 +92,6 @@ let
       export XDG_DATA_HOME="''${XDG_DATA_HOME:-$real/.local/share}"
       export XDG_STATE_HOME="''${XDG_STATE_HOME:-$real/.local/state}"
       export SEMGREP_SEND_METRICS="''${SEMGREP_SEND_METRICS:-off}"
-      export PIPAPI_PYTHON_LOCATION="''${PIPAPI_PYTHON_LOCATION:-${pyWithPip}/bin/python3}"
       # Логин общий с основным agy. Если agy однажды заменит ссылку своим
       # файлом (обновил токен через rename), это уже валидный токен профиля.
       # Без -f: настоящий токен не перетираем; || true — гонка двух первых запусков.
@@ -116,13 +104,15 @@ let
   };
 in
 {
-  home.packages = [ wrapper sync ];
+  # sec-scan — в общий PATH: им пользуются и claude, и codex, и руки.
+  # Остальные инструменты — в agy-sec или `nix develop ~/nixos-conf#security`.
+  home.packages = [ wrapper sync secTools.sec-scan ];
 
   home.file = {
     "${gemini}/GEMINI.md".source = ./GEMINI.md;
     "${gemini}/config/skills" = ai.recursive "${payload}/claude/skills";
     "${gemini}/config/agents" = ai.recursive "${payload}/agy/agents";
-  };
+  } // secSkillFiles;
 
   home.activation.agySecSync =
     lib.hm.dag.entryAfter [ "writeBoundary" ] "$DRY_RUN_CMD ${sync}/bin/agy-sec-sync";

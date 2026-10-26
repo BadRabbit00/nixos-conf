@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "badrabbit-sec-scan": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793025997,
+        "narHash": "sha256-YNMGANx2d5AwcgkKnx90uorKAuWLhcVBhiRcb5Y7wYw=",
+        "owner": "BadRabbit00",
+        "repo": "badrabbit-sec-scan",
+        "rev": "121aa7d38fefaffbd5737d9634c111f236f39e40",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BadRabbit00",
+        "repo": "badrabbit-sec-scan",
+        "type": "github"
+      }
+    },
     "catppuccin": {
       "inputs": {
         "nixpkgs": [
@@ -163,6 +183,7 @@
     },
     "root": {
       "inputs": {
+        "badrabbit-sec-scan": "badrabbit-sec-scan",
         "catppuccin": "catppuccin",
         "craftapps": "craftapps",
         "home-manager": "home-manager",
