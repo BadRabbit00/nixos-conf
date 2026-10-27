@@ -25,6 +25,10 @@ let
   payload = import ../../ecc/payload.nix { inherit lib pkgs runtime; };
   secTools = import ./tools.nix { inherit lib pkgs inputs pkgsCuda; };
   inherit (secTools) tools;
+  perms = import ./permissions.nix;
+  # у agy только префиксы: флаги и пути он не различает
+  allowCommands = lib.attrNames perms.commands ++ lib.attrNames perms.read;
+  semgrepMcp = import ./semgrep-mcp.nix { inherit pkgs; };
 
   dir = ".agy-security";
   gemini = "${dir}/.gemini";
@@ -39,29 +43,18 @@ let
 
   # Модель при первом запуске (seed). Потом ключ — выбор пользователя:
   # /model и --model сильнее, ребилд его не перетирает.
+  # permissions.allow — наоборот, закреплён Nix'ом и перетирает ручные правки:
+  # это allow-list для headless-прогонов (`agy-sec --print`), где подтвердить
+  # команду некому и всё вне списка soft-deny'ится. Сам список — в
+  # ./permissions.nix, общий с opencode-sec и agy-sdk-sec.
   settingsFrag = (pkgs.formats.json { }).generate "agy-sec-settings.json" {
     model = "Gemini 4 Argon (High)";
+    permissions.allow = map (c: "command(${c})") allowCommands;
   };
 
   # Форма записи — как у agy (protojson), см. ../../mcp/default.nix.
   mcpFrag = (pkgs.formats.json { }).generate "agy-sec-mcp.json" {
-    semgrep = {
-      "$typeName" = "exa.cascade_plugins_pb.CascadePluginCommandTemplate";
-      command = "${pkgs.semgrep}/bin/semgrep";
-      args = [ "mcp" "--transport" "stdio" ];
-      # `semgrep mcp` сам включает OTel-трейсинг на сервер Semgrep (git user,
-      # имя репо, ветка) — для клиентских репо это утечка. Без токена
-      # semgrep_scan / findings / supply_chain всё равно падают (auto-конфиг при
-      # выключенных метриках), поэтому выключены: сканы — через CLI с p/…
-      env = {
-        SEMGREP_SEND_METRICS = "off";
-        SEMGREP_MCP_DISABLE_TRACING = "true";
-        SEMGREP_ENABLE_VERSION_CHECK = "0";
-        SEMGREP_SCAN_DISABLED = "true";
-        SEMGREP_FINDINGS_DISABLED = "true";
-        SEMGREP_SCAN_SUPPLY_CHAIN_DISABLED = "true";
-      };
-    };
+    semgrep = { "$typeName" = "exa.cascade_plugins_pb.CascadePluginCommandTemplate"; } // semgrepMcp;
   };
 
 
@@ -73,8 +66,8 @@ let
       ${ai.mergeJson { file = ''"$HOME/${gemini}/config/mcp_config.json"''; frag = mcpFrag;
                        expr = ".mcpServers = ((.mcpServers // {}) + $ours[0])"; }}
       ${ai.mergeJson { file = ''"$HOME/${gemini}/antigravity-cli/settings.json"''; frag = settingsFrag;
-                       expr = "$ours[0] + ."; }}
-      echo "agy-sec: MCP semgrep и модель по умолчанию влиты в ~/${gemini}"
+                       expr = "($ours[0] + .) | .permissions = $ours[0].permissions"; }}
+      echo "agy-sec: MCP semgrep, модель по умолчанию и permissions.allow влиты в ~/${gemini}"
     '';
   };
 
@@ -92,6 +85,7 @@ let
       export XDG_DATA_HOME="''${XDG_DATA_HOME:-$real/.local/share}"
       export XDG_STATE_HOME="''${XDG_STATE_HOME:-$real/.local/state}"
       export SEMGREP_SEND_METRICS="''${SEMGREP_SEND_METRICS:-off}"
+      ${lib.concatStrings (lib.mapAttrsToList (k: v: "export ${k}='${lib.replaceStrings [ "'" ] [ "'\\''" ] v}'\n") perms.env)}
       # Логин общий с основным agy. Если agy однажды заменит ссылку своим
       # файлом (обновил токен через rename), это уже валидный токен профиля.
       # Без -f: настоящий токен не перетираем; || true — гонка двух первых запусков.
@@ -104,6 +98,9 @@ let
   };
 in
 {
+  # Тот же профиль на локальной модели: opencode-sec, agy-sdk-sec, llama-sec.
+  imports = [ ./local ];
+
   # sec-scan — в общий PATH: им пользуются и claude, и codex, и руки.
   # Остальные инструменты — в agy-sec или `nix develop ~/nixos-conf#security`.
   home.packages = [ wrapper sync secTools.sec-scan ];

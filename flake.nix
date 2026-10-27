@@ -58,6 +58,12 @@
       url = "github:BadRabbit00/badrabbit-sec-scan";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Одноразовая VM для активного аудита (sec-vm): без сети и общих папок.
+    microvm = {
+      url = "github:astro/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, catppuccin, ... }@inputs:
@@ -100,6 +106,11 @@
         system = "x86_64-linux";
         config = { allowUnfree = true; cudaSupport = true; };
       };
+    };
+    # Стенд активного аудита: VM без сети; проверка изоляции — в flake check.
+    secVm = import ./home/ai/profiles/security/vm {
+      inherit inputs;
+      pkgs = import nixpkgs { system = "x86_64-linux"; };
     };
   in {
     nixosConfigurations = {
@@ -145,6 +156,10 @@
         packages = secTools.tools;
         shellHook = ''echo "security: sec-scan, semgrep, gitleaks, trivy, promptfoo, garak, zap… (см. home/ai/profiles/security/GEMINI.md)"'';
       };
+
+    # nix run .#sec-vm -- up <проект>; изоляцию раннера проверяет nix flake check.
+    packages.x86_64-linux.sec-vm = secVm.sec-vm;
+    checks.x86_64-linux.sec-vm-isolation = secVm.isolationCheck;
 
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {

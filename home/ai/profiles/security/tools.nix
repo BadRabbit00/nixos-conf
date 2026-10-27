@@ -29,6 +29,8 @@ let
 
   ci = inputs.badrabbit-sec-scan.packages.${pkgs.stdenv.hostPlatform.system};
   inherit (ci) sec-scan promptfoo sec-pytest;
+  # Тот же пакет, что flake check проверяет: гость вычисляется один раз на флейк.
+  sec-vm = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.sec-vm;
 
   # pip_api зовёт `python -m pip`; у голого python3 из closure pip-audit pip нет.
   # Свой python через PIPAPI_PYTHON_LOCATION сильнее (аудит venv проекта).
@@ -41,6 +43,7 @@ let
   tools = with pkgs; [
     sec-scan           # гейт secrets/SAST/SCA/IaC/SBOM, как в CI
     sec-pytest         # pytest для своих тестов в .sec/test
+    sec-vm             # изолированный стенд активного аудита (VM без сети)
     # SAST
     semgrep            # semgrep scan; `semgrep mcp` — MCP-сервер профиля agy-sec
     bandit             # Python AST
@@ -67,5 +70,5 @@ let
   ] ++ lib.optional (pkgsCuda != null) garak;
 in
 {
-  inherit tools sec-scan;
+  inherit tools sec-scan sec-vm;
 }

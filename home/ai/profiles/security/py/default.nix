@@ -77,6 +77,9 @@ in
   mcp-scanner = mkEnv { name = "cisco-mcp-scanner"; dir = ./mcp-scanner; dist = "cisco-ai-mcp-scanner"; };
   # AgentDojo (ETH Zurich): бенчмарк устойчивости агента к prompt injection.
   agentdojo = mkEnv { name = "agentdojo"; dir = ./agentdojo; dist = "agentdojo"; };
+  # Google Antigravity SDK: агент на локальной модели (LocalOpenAIAgentConfig ->
+  # llama-server). Колесо несёт Go-бинарь localharness — сам агентный рантайм.
+  antigravity-sdk = mkEnv { name = "antigravity-sdk"; dir = ./antigravity-sdk; dist = "google-antigravity"; };
 } // lib.optionalAttrs (pkgsCuda != null) {
   # garak (NVIDIA): 230+ проб уязвимостей модели. Только локально, на RTX:
   # цели — llama-server (OpenAI API), HF-модели, API. В CI его место — promptfoo.

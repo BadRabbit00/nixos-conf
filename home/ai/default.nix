@@ -33,6 +33,7 @@
     claude-code
     codex           # OpenAI Codex CLI
     antigravity-cli # agy, Gemini
+    opencode        # провайдер-агностичный агент; ИБ-профиль на локальной модели — opencode-sec
   ];
 
   # gemini-cli. Секреты (CONTEXT7_API_KEY, GITHUB_TOKEN) приходят из sops-nix,
