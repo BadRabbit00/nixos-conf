@@ -33,10 +33,14 @@ let
   # Системная инструкция: GEMINI.md профиля + поправки на локальный запуск.
   prompt = pkgs.concatText "cilla-local.md" [ ../GEMINI.md ./LOCAL.md ];
 
-  # Все скиллы agy-sec одним деревом: ECC + свои sec-audit-*.
+  # Все скиллы agy-sec одним деревом: ECC + свои sec-audit-* + project-flake.
   skills = pkgs.symlinkJoin {
     name = "agy-sec-skills";
-    paths = [ "${payload}/claude/skills" ../skills ];
+    paths = [
+      "${payload}/claude/skills"
+      ../skills
+      (pkgs.linkFarm "project-flake-skill" [ { name = "project-flake"; path = ../../../nix-toolkit/skills/project-flake; } ])
+    ];
   };
 
   ocDir = ".opencode-security";

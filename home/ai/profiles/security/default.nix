@@ -40,6 +40,8 @@ let
   secSkillFiles = lib.listToAttrs (map
     (n: lib.nameValuePair "${gemini}/config/skills/${n}" (ai.recursive (./skills + "/${n}")))
     secSkills);
+  # Контракт флейка проекта (nix-toolkit) — им Цилла готовит проект к sec-vm.
+  projectFlakeSkill = ../../nix-toolkit/skills/project-flake;
 
   # Модель при первом запуске (seed). Потом ключ — выбор пользователя:
   # /model и --model сильнее, ребилд его не перетирает.
@@ -109,6 +111,7 @@ in
     "${gemini}/GEMINI.md".source = ./GEMINI.md;
     "${gemini}/config/skills" = ai.recursive "${payload}/claude/skills";
     "${gemini}/config/agents" = ai.recursive "${payload}/agy/agents";
+    "${gemini}/config/skills/project-flake" = ai.recursive projectFlakeSkill;
   } // secSkillFiles;
 
   home.activation.agySecSync =

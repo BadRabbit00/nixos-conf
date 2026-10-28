@@ -99,3 +99,10 @@ homeConfigurations."<user>@<host>" = home-manager.lib.homeManagerConfiguration {
 - Avoid IFD in flakes (`lib.importJSON "${drv}/…"`, `builtins.readFile` of an output). When unavoidable, isolate it in one derivation so the rest of the eval stays fast.
 - Big `let` blocks that build strings with `${pkgs.x}` force those packages to be realised at eval time of the string? No, but they do force download when the string is used in a build. Keep eval cheap: no `builtins.fetchTarball` without a hash.
 - `nix flake check --no-build` is the fast eval gate; run it before pushing.
+
+## Project flakes
+
+For an application repository (services, images, deployment) use the
+`project-flake` skill: it fixes the house contract (`lib.components`, one
+package per component, `nixosModules.default`, `checks.vm`) and its skeleton
+uses `genAttrs` without flake-utils. This skill stays the general reference.
