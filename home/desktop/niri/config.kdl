@@ -34,8 +34,17 @@ output "eDP-1" {
     scale 1.25
 }
 
+// Laptop panel, matched by make/model since its connector name varies (eDP-1/eDP-2).
+output "China Star Optoelectronics Technology Co., Ltd MNG007DA6-2 0x00006006" {
+    position x=0 y=0
+}
+
 output "HDMI-A-1" {
     scale 1.25
+    // Monitor is physically rotated 90° clockwise (portrait).
+    transform "90"
+    // Bottom-aligned with the laptop, so the cursor crosses on the lower part.
+    position x=1707 y=-982
 }
 
 layout {
