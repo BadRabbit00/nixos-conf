@@ -21,8 +21,8 @@
 
 let
   ai = import ../../../lib.nix { inherit lib pkgs; };
-  runtime = import ../../../ecc/runtime.nix { inherit lib pkgs; };
-  payload = import ../../../ecc/payload.nix { inherit lib pkgs runtime; };
+  ecc = inputs.ecc.lib.mk { inherit pkgs lib; };
+  inherit (ecc) payload;
   secTools = import ../tools.nix { inherit lib pkgs inputs pkgsCuda; };
   py = import ../py { inherit lib pkgs inputs pkgsCuda; };
   llm = import ../../../local-llm.nix { inherit pkgs; home = config.home.homeDirectory; };
@@ -33,13 +33,13 @@ let
   # Системная инструкция: GEMINI.md профиля + поправки на локальный запуск.
   prompt = pkgs.concatText "cilla-local.md" [ ../GEMINI.md ./LOCAL.md ];
 
-  # Все скиллы agy-sec одним деревом: ECC + свои sec-audit-* + project-flake.
+  # Все скиллы agy-sec одним деревом: ECC (включая project-flake из модуля
+  # badrabbit форка) + свои sec-audit-*.
   skills = pkgs.symlinkJoin {
     name = "agy-sec-skills";
     paths = [
       "${payload}/claude/skills"
       ../skills
-      (pkgs.linkFarm "project-flake-skill" [ { name = "project-flake"; path = ../../../nix-toolkit/skills/project-flake; } ])
     ];
   };
 

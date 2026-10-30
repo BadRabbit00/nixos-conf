@@ -20,9 +20,9 @@
 
 let
   ai = import ../../lib.nix { inherit lib pkgs; };
-  # Тот же payload, что раскладывает ../../ecc: одинаковый вызов — одна деривация.
-  runtime = import ../../ecc/runtime.nix { inherit lib pkgs; };
-  payload = import ../../ecc/payload.nix { inherit lib pkgs runtime; };
+  # Тот же payload, что раскладывает ../../ecc (форк BadRabbit00/ECC): одинаковый вызов — одна деривация.
+  ecc = inputs.ecc.lib.mk { inherit pkgs lib; };
+  inherit (ecc) runtime payload;
   secTools = import ./tools.nix { inherit lib pkgs inputs pkgsCuda; };
   inherit (secTools) tools;
   perms = import ./permissions.nix;
@@ -40,9 +40,6 @@ let
   secSkillFiles = lib.listToAttrs (map
     (n: lib.nameValuePair "${gemini}/config/skills/${n}" (ai.recursive (./skills + "/${n}")))
     secSkills);
-  # Контракт флейка проекта (nix-toolkit) — им Цилла готовит проект к sec-vm.
-  projectFlakeSkill = ../../nix-toolkit/skills/project-flake;
-
   # Модель при первом запуске (seed). Потом ключ — выбор пользователя:
   # /model и --model сильнее, ребилд его не перетирает.
   # permissions.allow — наоборот, закреплён Nix'ом и перетирает ручные правки:
@@ -109,9 +106,9 @@ in
 
   home.file = {
     "${gemini}/GEMINI.md".source = ./GEMINI.md;
+    # Контракт флейка проекта (project-flake, модуль badrabbit форка) уже внутри payload.
     "${gemini}/config/skills" = ai.recursive "${payload}/claude/skills";
     "${gemini}/config/agents" = ai.recursive "${payload}/agy/agents";
-    "${gemini}/config/skills/project-flake" = ai.recursive projectFlakeSkill;
   } // secSkillFiles;
 
   home.activation.agySecSync =

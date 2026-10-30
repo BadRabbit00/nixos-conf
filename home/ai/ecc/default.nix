@@ -1,6 +1,8 @@
-# ECC (Everything Claude Code) — операционная система для агентов: 311 скиллов,
-# 71 агент, 97 slash-команд, правила и хук-рантайм на node.
-# https://github.com/affaan-m/ecc (MIT)
+# ECC (Everything Claude Code) — операционная система для агентов: сотни скиллов,
+# агенты, slash-команды, правила и хук-рантайм на node.
+# https://github.com/affaan-m/ecc (MIT); источник — свой форк BadRabbit00/ECC, ветка
+# badrabbit (flake-input `ecc`): там же модуль `badrabbit` со своими скиллами,
+# как добавить скилл — BADRABBIT.md в форке.
 #
 # Апстрим ставится через `npx ecc-universal setup` или `/plugin install`, которые
 # копируют репозиторий в ~/.claude/plugins и зовут `node` из случайного PATH.
@@ -21,20 +23,21 @@
 #   - хуки вливаются в ~/.claude/settings.json activation-скриптом по id, как
 #     ai-mcp-sync вливает MCP: файл мутабельный, владеть им через home.file нельзя.
 #
-# Профиль — ECC `developer` + `security` + `devops-infra`: что ставить, решает
-# список `modules` в payload.nix по апстримному manifests/install-modules.json, а не
-# ручной перечень из 300 имён.
-# Файлы модуля:
-#   runtime.nix  репозиторий + node_modules в сторе, обёртки ecc-run / ecc-hook
-#   payload.nix  выборка по модулям, модели агентов, переписанная документация
-#   default.nix  раскладка по агентам и слияние хуков/ролей в их конфиги
-{ lib, pkgs, ... }:
+# Профиль — ECC `developer` + `security` + `devops-infra` + `badrabbit` (свои
+# скиллы): что ставить, решает список `modules` в nix/payload.nix форка по его
+# manifests/install-modules.json. Сами деривации (runtime.nix: репозиторий +
+# node_modules в сторе, обёртки ecc-run / ecc-hook; payload.nix: выборка по
+# модулям, модели агентов, переписанная документация; nix-first.md,
+# ECC-GUIDE.md) живут в форке, каталог nix/. Здесь только раскладка по агентам
+# и слияние хуков/ролей в их конфиги.
+{ lib, pkgs, inputs, ... }:
 
 let
   ai = import ../lib.nix { inherit lib pkgs; };
-  runtime = import ./runtime.nix { inherit lib pkgs; };
-  payload = import ./payload.nix { inherit lib pkgs runtime; };
-  inherit (runtime) run hook;
+  # Деривации собирает сам форк (inputs.ecc.lib.mk); тот же вызов в профиле
+  # security даёт ту же деривацию.
+  ecc = inputs.ecc.lib.mk { inherit pkgs lib; };
+  inherit (ecc) payload run hook;
 
   # --- Слияние с мутабельными конфигами агентов --------------------------------
   # settings.json claude пишет сам (autoMode, modelSettings…), config.toml codex
@@ -105,14 +108,15 @@ in
     "${roots.claude}/agents"    = recursive "${payload}/claude/agents";
     "${roots.claude}/commands"  = recursive "${payload}/claude/commands";
     "${roots.claude}/rules/ecc" = recursive "${payload}/claude/rules/ecc";
-    "${roots.codex}/skills"     = recursive "${payload}/codex/skills";
+    # codex не видит скилл с SKILL.md-симлинком: каждый скилл — симлинк на каталог.
+    "${roots.codex}/skills"     = recursive (ai.dirLinks "ecc-codex-skills" "${payload}/codex/skills");
     "${roots.codex}/prompts"    = recursive "${payload}/codex/prompts";
     "${roots.codex}/agents"     = recursive "${payload}/codex/agents";
     "${roots.codex}/AGENTS.md".source = "${payload}/codex/AGENTS.md";
     "${roots.agy}/agents"       = recursive "${payload}/agy/agents";
     # Гайд по всем командам: claude подтягивает его из ~/.claude/CLAUDE.md
     # через `@~/.claude/ecc-guide.md`, codex — внутри AGENTS.md выше.
-    "${roots.claude}/ecc-guide.md".source = ./ECC-GUIDE.md;
+    "${roots.claude}/ecc-guide.md".source = "${payload}/ECC-GUIDE.md";
   };
 
   home.activation.eccSync =

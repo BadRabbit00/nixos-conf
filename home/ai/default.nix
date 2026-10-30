@@ -3,9 +3,11 @@
 #
 #   mcp/         MCP-серверы, вливаются в мутабельные конфиги агентов
 #   skills/      сторонние SKILL.md, запинены по rev/hash, скрипты через Nix-обёртки
-#   ecc/         Everything Claude Code: скиллы, агенты, команды, правила, хуки
-#   nix-toolkit/ свои Nix-агенты, команды и справочники
-#   ask-models/  обёртки ask-*/write-* для чужих моделей и их команды
+#   ecc/         Everything Claude Code из форка BadRabbit00/ECC (flake-input ecc):
+#                скиллы, агенты, команды, правила, хуки; там же свои Nix-агенты,
+#                команды /nix-*, /ask-*, /write-* и скиллы (модуль badrabbit)
+#   nix-toolkit/ пакеты инструментов Nix (statix, nvd, nix-tree…)
+#   ask-models/  обёртки ask-*/write-* для чужих моделей
 #   profiles.nix профили Claude Code (CLAUDE_CONFIG_DIR): каталог, обёртка, CLAUDE.md, скиллы, MCP
 #   profiles/    code (обычный ~/.claude, Лилит + ECC) и montage (~/.claude-montage, claude-montage)
 #                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + ECC

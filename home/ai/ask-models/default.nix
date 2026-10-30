@@ -11,12 +11,11 @@
 #
 # Отчёт: $ASK_MODELS_DIR (по умолчанию ~/.local/state/ask-models)/<repo>/<tool>-<ts>.md
 # с шапкой, промптом, ответом, а для write-* ещё и git-диффом после работы модели.
-# Команды для Claude — ~/.claude/commands/<tool>.md; для Codex — ~/.codex/prompts/
-# (только agy/argon: Codex спрашивать самого себя незачем).
-{ lib, pkgs, ... }:
+# Команды /ask-* и /write-* для Claude и промпты Codex лежат в форке ECC
+# (BadRabbit00/ECC, commands/; для Codex только agy/argon: Codex спрашивать самого себя незачем).
+{ pkgs, ... }:
 
 let
-  ai = import ../lib.nix { inherit lib pkgs; };
   reportDir = ''"''${ASK_MODELS_DIR:-$HOME/.local/state/ask-models}"'';
 
   # Разбор аргументов, промпт из файла / слов / stdin, путь отчёта, шапка.
@@ -117,28 +116,7 @@ let
     (agyTool   { name = "write-argon"; mode = "write"; model = "gemini-4-argon-high";   effort = "high"; })
   ];
 
-  inherit (ai) banner roots;
-  commandNames = ai.mdNames ./commands;
-  codexNames = builtins.filter (n: !(lib.hasSuffix "astra" n)) commandNames;
-  commands = pkgs.runCommand "ask-models-commands" { nativeBuildInputs = [ pkgs.gawk ]; } ''
-    mkdir -p "$out"/claude "$out"/codex
-    for f in ${./commands}/*.md; do
-      n=$(basename "$f")
-      awk -v banner="$(cat ${banner})" '
-        BEGIN { fm = 0; done = 0 }
-        { print }
-        !done && /^---[[:space:]]*$/ { fm++; if (fm == 2) { print ""; print banner; done = 1 } }
-      ' "$f" > "$out/claude/$n"
-      { printf '# /%s\n\n' "''${n%.md}"
-        awk 'BEGIN{fm=0} /^---[[:space:]]*$/ && fm<2 {fm++; next} fm==2 || fm==0 {print}' "$out/claude/$n"
-      } > "$out/codex/$n"
-    done
-  '';
 in
 {
   home.packages = tools;
-
-  home.file =
-    ai.perName { dst = "${roots.claude}/commands"; src = "${commands}/claude"; names = commandNames; ext = ".md"; }
-    // ai.perName { dst = "${roots.codex}/prompts"; src = "${commands}/codex"; names = codexNames; ext = ".md"; };
 }

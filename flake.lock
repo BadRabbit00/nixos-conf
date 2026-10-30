@@ -60,6 +60,27 @@
         "type": "github"
       }
     },
+    "ecc": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793300799,
+        "narHash": "sha256-dun17wiUo4mbJ5uMdgIiWSp6h+sk5gptuHtLHGfhk0E=",
+        "owner": "BadRabbit00",
+        "repo": "ECC",
+        "rev": "be6f99eb7c1cf35710b40200f8897c57b30bfc82",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BadRabbit00",
+        "ref": "badrabbit",
+        "repo": "ECC",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -207,6 +228,7 @@
         "badrabbit-sec-scan": "badrabbit-sec-scan",
         "catppuccin": "catppuccin",
         "craftapps": "craftapps",
+        "ecc": "ecc",
         "home-manager": "home-manager",
         "microvm": "microvm",
         "nixgl": "nixgl",

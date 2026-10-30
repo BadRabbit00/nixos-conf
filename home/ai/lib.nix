@@ -18,25 +18,27 @@ rec {
   # не нужно уметь ходить по симлинку на каталог, стор остаётся read-only.
   recursive = path: { source = path; recursive = true; };
 
+  # Codex наоборот: молча пропускает скилл, чей SKILL.md — симлинк, но идёт по
+  # симлинку на каталог. Поэтому в его корне скилл — один симлинк на каталог в
+  # сторе, где SKILL.md обычный файл (проверено на codex-cli 0.162).
+  skillEntry = root: drv:
+    if root == "${roots.codex}/skills" then { source = drv; } else recursive drv;
+
   # { name = drv; } -> home.file для всех skillRoots.
   skillFiles = skills: lib.listToAttrs (lib.concatMap (root:
-    lib.mapAttrsToList (name: drv: lib.nameValuePair "${root}/${name}" (recursive drv)) skills)
+    lib.mapAttrsToList (name: drv: lib.nameValuePair "${root}/${name}" (skillEntry root drv)) skills)
     skillRoots);
 
-  # Поштучные записи home.file: { "<dst>/<n><ext>" = { source = "<src>/<n><ext>"; }; }
-  # Используется там, где каталог уже объявлен целиком другим модулем (ecc)
-  # и дописать в него можно только отдельными файлами.
-  perName = { dst, src, names, ext ? "", recursiveDirs ? false }:
-    lib.listToAttrs (map (n: lib.nameValuePair "${dst}/${n}${ext}"
-      (if recursiveDirs then recursive "${src}/${n}${ext}" else { source = "${src}/${n}${ext}"; }))
-      names);
+  # Для каталога, который HM раскладывает через `recursive` (lndir): каталог
+  # симлинков <name> -> src/<name>. lndir переносит симлинк как есть, так что
+  # в $HOME каждый скилл ляжет симлинком на каталог — то, что нужно codex.
+  dirLinks = name: src: pkgs.runCommand name { } ''
+    mkdir "$out"
+    for d in ${src}/*; do ln -s "$d" "$out/"; done
+  '';
 
   # Имена из локального каталога (не IFD: читается при evaluation из репо).
   dirNames = dir: builtins.attrNames (builtins.readDir dir);
-  mdNames = dir: map (lib.removeSuffix ".md") (dirNames dir);
-
-  # Памятка про Nix-доктрину, вшивается после frontmatter в каждый .md агента.
-  banner = ./nix-toolkit/banner.md;
 
   # Слияние своего фрагмента в JSON, которым владеет агент (claude пишет туда
   # кэши и счётчики, agy — свои MCP). Не владеем файлом через home.file, а

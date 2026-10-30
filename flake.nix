@@ -59,6 +59,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # ECC (Everything Claude Code) — свой форк апстрима affaan-m/ecc, ветка
+    # badrabbit: апстрим + модуль `badrabbit` со своими скиллами, Nix-агентами и
+    # командами, а также вся упаковка (nix/: стор, ecc-run/ecc-hook, выборка,
+    # модели агентов, Nix-баннер). Здесь остаётся только раскладка по домам
+    # агентов (home/ai/ecc). Обновление — `nix flake update ecc`.
+    ecc = {
+      url = "github:BadRabbit00/ECC/badrabbit";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Одноразовая VM для активного аудита (sec-vm): без сети и общих папок.
     microvm = {
       url = "github:astro/microvm.nix";
