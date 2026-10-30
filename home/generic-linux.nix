@@ -33,7 +33,7 @@ in
       # `.override { cudaSupport = true; }` даёт другой derivation и сборку
       # из исходников на часы (Blender).
       _module.args.pkgsCuda = import pkgs.path {
-        inherit (pkgs) system;
+        inherit (pkgs.stdenv.hostPlatform) system;
         config = { allowUnfree = true; cudaSupport = true; };
       };
     }
