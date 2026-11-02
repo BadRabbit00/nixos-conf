@@ -71,7 +71,8 @@ let
   skills = { inherit arena; }
     // import ./brainstorming.nix { inherit lib pkgs; }
     // import ./ui-ux-pro-max.nix { inherit lib pkgs; }
-    // import ./emil.nix { inherit lib pkgs; };
+    // import ./emil.nix { inherit lib pkgs; }
+    // import ./unslop.nix { inherit lib pkgs; };
 in
 {
   home.file = ai.skillFiles skills;
