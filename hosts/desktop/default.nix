@@ -56,13 +56,6 @@
 
   security.pam.services.hyprlock = {};
 
-  nixpkgs.overlays = [
-    (final: prev: {
-      openldap = prev.openldap.overrideAttrs (old: {
-        doCheck = false;
-      });
-    })
-  ];
 
   system.stateVersion = "24.05";
 }

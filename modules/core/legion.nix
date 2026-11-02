@@ -11,8 +11,20 @@
   # на батарее powersave + balanced. Статичный performance на батарее стоил 28 Вт в простое.
 
   # 💉 Внедряем проприетарный модуль LenovoLegionLinux
+  # nixpkgs подписывает модули через kmodigest, и aggregateModules ждёт от
+  # каждого внешнего модуля <имя>.ko.cer. Makefile LenovoLegionLinux ставит .ko
+  # голым `install`, мимо подписи, поэтому ставим через kbuild modules_install,
+  # как broadcom-sta в nixpkgs. Убрать, когда пакет в nixpkgs починят.
   boot.extraModulePackages = with config.boot.kernelPackages; [
-    lenovo-legion-module
+    (lenovo-legion-module.overrideAttrs (old: {
+      makeFlags = old.makeFlags ++ [
+        "INSTALL_MOD_PATH=${placeholder "out"}"
+        "INSTALL_MOD_DIR=kernel/drivers/platform/x86"
+        "DEPMOD=true"
+      ];
+      installFlags = [ "-C" "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build" "M=$(PWD)" ];
+      installTargets = [ "modules_install" ];
+    }))
   ];
   boot.kernelModules = [ "legion-laptop" ];
 
