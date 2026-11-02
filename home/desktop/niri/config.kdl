@@ -93,8 +93,8 @@ spawn-at-startup "wl-paste" "--type" "text" "--watch" "cliphist" "store"
 spawn-at-startup "wl-paste" "--type" "image" "--watch" "cliphist" "store"
 spawn-at-startup "xwayland-satellite"
 
-// Wait for a bit before running wallpaper script to ensure daemon is up
-spawn-at-startup "sh" "-c" "sleep 1 && ~/.local/bin/wall.sh init"
+// Обои: случайная картинка на старте и новая раз в 5 минут (wall-cycle)
+spawn-at-startup "wall-cycle"
 
 environment {
     DISPLAY ":0"
