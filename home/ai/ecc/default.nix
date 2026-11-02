@@ -34,8 +34,7 @@
 # Флейвор (ai.ecc.flavour), контракт описан в BADRABBIT.md форка:
 #   legacy  payload.nix: ECC целиком, rules/ecc, хуки ecc-hook, ecc-guide.md;
 #   br      payload-br.nix (badrabbit/): свой CLAUDE.md-ядро, стиль orchestrator,
-#           24 изолированных агента, rules/br, хуки br-hook, br/bin/br-risk (калькулятор
-#           карты рисков, вызывается по пути, не из PATH); settings.fragment.json
+#           23 изолированных агента, rules/br, хуки br-hook; settings.fragment.json
 #           (env + outputStyle) вливается в settings.json. rules/ecc не ставится.
 # codex и agy пока всегда получают legacy-payload: у br экспорта для них нет.
 { config, lib, pkgs, inputs, ... }:
@@ -156,9 +155,6 @@ in
       "${roots.claude}/rules/br"      = recursive "${payloadBr}/claude/rules/br";
       "${roots.claude}/output-styles" = recursive "${payloadBr}/claude/output-styles";
       "${roots.claude}/br/templates"  = recursive "${payloadBr}/claude/br/templates";
-      # br-risk зовут по пути ~/.claude/br/bin/br-risk (оркестратор и скилл risk-model),
-      # поэтому в home.packages его нет; recursive кладёт симлинк на сторовый бинарь как есть.
-      "${roots.claude}/br/bin"        = recursive "${payloadBr}/claude/br/bin";
     } else {
       "${roots.claude}/rules/ecc" = recursive "${payload}/claude/rules/ecc";
       # Гайд по всем командам: claude подтягивает его из ~/.claude/CLAUDE.md

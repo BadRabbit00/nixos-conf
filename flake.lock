@@ -67,11 +67,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793613883,
-        "narHash": "sha256-s2CL7OQZkkjeN7W7ZiFT6+XaGsM/NztFSkEN2V9j5Ik=",
+        "lastModified": 1793638240,
+        "narHash": "sha256-OZZxyiAIzbmQv634/JybMnUyY5BcmbC/t6lkOnK2jjk=",
         "owner": "BadRabbit00",
         "repo": "ECC",
-        "rev": "63140215813713571cfe2f9eadba889b33326a81",
+        "rev": "9a28e35101b1e2c001349e7212ec11260542c63c",
         "type": "github"
       },
       "original": {
