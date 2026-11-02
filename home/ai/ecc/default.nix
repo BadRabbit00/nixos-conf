@@ -30,14 +30,35 @@
 # модулям, модели агентов, переписанная документация; nix-first.md,
 # ECC-GUIDE.md) живут в форке, каталог nix/. Здесь только раскладка по агентам
 # и слияние хуков/ролей в их конфиги.
-{ lib, pkgs, inputs, ... }:
+#
+# Флейвор (ai.ecc.flavour), контракт описан в BADRABBIT.md форка:
+#   legacy  payload.nix: ECC целиком, rules/ecc, хуки ecc-hook, ecc-guide.md;
+#   br      payload-br.nix (badrabbit/): свой CLAUDE.md-ядро, стиль orchestrator,
+#           24 изолированных агента, rules/br, хуки br-hook, br/bin/br-risk (калькулятор
+#           карты рисков, вызывается по пути, не из PATH); settings.fragment.json
+#           (env + outputStyle) вливается в settings.json. rules/ecc не ставится.
+# codex и agy пока всегда получают legacy-payload: у br экспорта для них нет.
+{ config, lib, pkgs, inputs, ... }:
 
 let
   ai = import ../lib.nix { inherit lib pkgs; };
+  cfg = config.ai.ecc;
+  isBr = cfg.flavour == "br";
   # Деривации собирает сам форк (inputs.ecc.lib.mk); тот же вызов в профиле
   # security даёт ту же деривацию.
   ecc = inputs.ecc.lib.mk { inherit pkgs lib; };
-  inherit (ecc) payload run hook;
+  inherit (ecc) payload payloadBr run hook brHook;
+  claudePayload = if isBr then payloadBr else payload;
+
+  # settings.fragment.json br-флейвора; при legacy снимаем ровно те значения,
+  # которые он туда положил, чтобы откат не оставлял orchestrator-стиль.
+  # Читаем из исходников форка, не из выхода payload: без IFD.
+  brSettings = lib.importJSON (inputs.ecc + "/badrabbit/settings.fragment.json");
+  settingsExpr =
+    if isBr then ". * $ours[0]"
+    else lib.concatStringsSep " | " (
+      lib.mapAttrsToList (k: v: ''if .env.${k} == ${builtins.toJSON v} then del(.env.${k}) else . end'') brSettings.env
+      ++ [ ''if .outputStyle == ${builtins.toJSON brSettings.outputStyle} then del(.outputStyle) else . end'' ]);
 
   # --- Слияние с мутабельными конфигами агентов --------------------------------
   # settings.json claude пишет сам (autoMode, modelSettings…), config.toml codex
@@ -47,9 +68,10 @@ let
     runtimeInputs = ai.mergeInputs;
     text = ''
       # shellcheck disable=SC2016  # jq-выражения обязаны быть в одинарных кавычках
-      # Свои записи узнаём по id (ставит ECC) или по команде ecc-hook (сторовый
-      # путь меняется с каждым ребилдом); чужие хуки остаются как были.
-      ${ai.mergeJson { file = ''"$HOME/${ai.roots.claude}/settings.json"''; frag = "${payload}/hooks.json"; expr = ''
+      # Свои записи узнаём по id (ставит ECC) или по команде ecc-hook/br-hook
+      # (сторовый путь меняется с каждым ребилдом); чужие хуки остаются как были.
+      # Смена флейвора так же вычищает хуки другого флейвора.
+      ${ai.mergeJson { file = ''"$HOME/${ai.roots.claude}/settings.json"''; frag = "${claudePayload}/hooks.json"; expr = ''
         ($ours[0].hooks) as $new
         | (.hooks // {}) as $old
         | .hooks = (
@@ -60,19 +82,21 @@ let
                     [ ($old[$ev] // [])[]
                       | select((.id // "") as $id
                                | ($new[$ev] // [] | map(.id) | index($id)) == null)
-                      | select(([.hooks[]?.command // ""] | any(test("/bin/ecc-hook "))) | not)
+                      | select(([.hooks[]?.command // ""] | any(test("/bin/(ecc|br)-hook "))) | not)
                     ]
                     + ($new[$ev] // [])
                   )
               )
+            | with_entries(select(.value != []))
           )''; }}
+      ${ai.mergeJson { file = ''"$HOME/${ai.roots.claude}/settings.json"''; frag = "${payloadBr}/settings.fragment.json"; expr = settingsExpr; }}
       # Codex: multi_agent и роли explorer/reviewer/docs_researcher из ECC
       # (config_file относителен CODEX_HOME -> ~/.codex/agents/*.toml ниже).
       # Существующие ключи пользователя сильнее наших.
       ${ai.mergeToml { file = ''"$HOME/${ai.roots.codex}/config.toml"''; frag = codexFrag; expr = ''
         .features = ($ours[0].features + (.features // {}))
         | .agents = ($ours[0].agents + (.agents // {}))''; }}
-      echo "ECC: хуки влиты в ~/.claude/settings.json, роли агентов — в ~/.codex/config.toml"
+      echo "ECC (${cfg.flavour}): хуки и настройки влиты в ~/.claude/settings.json, роли агентов — в ~/.codex/config.toml"
     '';
   };
 
@@ -99,26 +123,51 @@ let
   inherit (ai) recursive roots;
 in
 {
-  home.packages = [ run hook sync ];
-
-  # Плоская раскладка, как у ручного инсталлятора ECC. recursive: каталоги
-  # настоящие, файлы — симлинки в стор, соседние скиллы из ../skills не трогаем.
-  home.file = {
-    "${roots.claude}/skills"    = recursive "${payload}/claude/skills";
-    "${roots.claude}/agents"    = recursive "${payload}/claude/agents";
-    "${roots.claude}/commands"  = recursive "${payload}/claude/commands";
-    "${roots.claude}/rules/ecc" = recursive "${payload}/claude/rules/ecc";
-    # codex не видит скилл с SKILL.md-симлинком: каждый скилл — симлинк на каталог.
-    "${roots.codex}/skills"     = recursive (ai.dirLinks "ecc-codex-skills" "${payload}/codex/skills");
-    "${roots.codex}/prompts"    = recursive "${payload}/codex/prompts";
-    "${roots.codex}/agents"     = recursive "${payload}/codex/agents";
-    "${roots.codex}/AGENTS.md".source = "${payload}/codex/AGENTS.md";
-    "${roots.agy}/agents"       = recursive "${payload}/agy/agents";
-    # Гайд по всем командам: claude подтягивает его из ~/.claude/CLAUDE.md
-    # через `@~/.claude/ecc-guide.md`, codex — внутри AGENTS.md выше.
-    "${roots.claude}/ecc-guide.md".source = "${payload}/ECC-GUIDE.md";
+  options.ai.ecc = {
+    flavour = lib.mkOption {
+      type = lib.types.enum [ "legacy" "br" ];
+      default = "br";
+      description = "Какой payload форка ECC раскладывать в ~/.claude: legacy (payload.nix) или br (badrabbit/).";
+    };
+    core = lib.mkOption {
+      type = lib.types.nullOr lib.types.path;
+      readOnly = true;
+      default = if isBr then "${payloadBr}/claude/CLAUDE.md" else null;
+      description = "Ядро CLAUDE.md флейвора br (null для legacy); профиль code склеивает его со своей персоной.";
+    };
   };
 
-  home.activation.eccSync =
-    lib.hm.dag.entryAfter [ "writeBoundary" ] "$DRY_RUN_CMD ${sync}/bin/ecc-sync";
+  config = {
+    home.packages = [ run sync ] ++ (if isBr then [ brHook ] else [ hook ]);
+
+    # Плоская раскладка, как у ручного инсталлятора ECC. recursive: каталоги
+    # настоящие, файлы — симлинки в стор, соседние скиллы из ../skills не трогаем.
+    home.file = {
+      "${roots.claude}/skills"    = recursive "${claudePayload}/claude/skills";
+      "${roots.claude}/agents"    = recursive "${claudePayload}/claude/agents";
+      "${roots.claude}/commands"  = recursive "${claudePayload}/claude/commands";
+      # codex не видит скилл с SKILL.md-симлинком: каждый скилл — симлинк на каталог.
+      "${roots.codex}/skills"     = recursive (ai.dirLinks "ecc-codex-skills" "${payload}/codex/skills");
+      "${roots.codex}/prompts"    = recursive "${payload}/codex/prompts";
+      "${roots.codex}/agents"     = recursive "${payload}/codex/agents";
+      "${roots.codex}/AGENTS.md".source = "${payload}/codex/AGENTS.md";
+      "${roots.agy}/agents"       = recursive "${payload}/agy/agents";
+    } // (if isBr then {
+      "${roots.claude}/rules/br"      = recursive "${payloadBr}/claude/rules/br";
+      "${roots.claude}/output-styles" = recursive "${payloadBr}/claude/output-styles";
+      "${roots.claude}/br/templates"  = recursive "${payloadBr}/claude/br/templates";
+      # br-risk зовут по пути ~/.claude/br/bin/br-risk (оркестратор и скилл risk-model),
+      # поэтому в home.packages его нет; recursive кладёт симлинк на сторовый бинарь как есть.
+      "${roots.claude}/br/bin"        = recursive "${payloadBr}/claude/br/bin";
+    } else {
+      "${roots.claude}/rules/ecc" = recursive "${payload}/claude/rules/ecc";
+      # Гайд по всем командам: claude подтягивает его из ~/.claude/CLAUDE.md
+      # через `@~/.claude/ecc-guide.md` (profiles/code/ecc-legacy.md), codex —
+      # внутри AGENTS.md выше.
+      "${roots.claude}/ecc-guide.md".source = "${payload}/ECC-GUIDE.md";
+    });
+
+    home.activation.eccSync =
+      lib.hm.dag.entryAfter [ "writeBoundary" ] "$DRY_RUN_CMD ${sync}/bin/ecc-sync";
+  };
 }
