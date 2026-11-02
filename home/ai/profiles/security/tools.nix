@@ -27,7 +27,13 @@ let
     ''exec ${py.agentdojo}/bin/python -m agentdojo.scripts.benchmark "$@"'';
   garak = pkgs.writeShellScriptBin "garak" ''exec ${py.garak}/bin/garak "$@"'';
 
-  ci = inputs.badrabbit-sec-scan.packages.${pkgs.stdenv.hostPlatform.system};
+  # outputs флейка вычисляются заново на нашем pkgs: его packages строятся из
+  # legacyPackages входа и не видят оверлеи (semgrepFix во flake.nix).
+  sys = pkgs.stdenv.hostPlatform.system;
+  ci = ((import "${inputs.badrabbit-sec-scan}/flake.nix").outputs {
+    self = inputs.badrabbit-sec-scan;
+    nixpkgs = { inherit (pkgs) lib; legacyPackages.${sys} = pkgs; };
+  }).packages.${sys};
   inherit (ci) sec-scan promptfoo sec-pytest;
   # Тот же пакет, что flake check проверяет: гость вычисляется один раз на флейк.
   sec-vm = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.sec-vm;

@@ -87,6 +87,26 @@
         });
       });
     };
+    # nixpkgs 1c89083 ломает semgrep дважды. semgrep-core 1.180.0 (бинарь из колеса) роняет
+    # patchelf 0.19.2 и 0.18-unstable на ассерте shiftFile при --set-rpath.
+    # rpath в бинаре уже содержит $ORIGIN/libs, а glibc даёт сам ld.so из Nix,
+    # поэтому достаточно сменить только интерпретатор. Снять, когда nixpkgs починят.
+    semgrepFix = final: prev: {
+      pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+        (pyFinal: pyPrev: {
+          semgrep = pyPrev.semgrep.override {
+            # semgrep 1.180 импортирует mcp.server.fastmcp, которого нет в mcp 2.x.
+            mcp = pyFinal.mcp_1;
+            semgrep-core = pyPrev.semgrep.passthru.semgrep-core.overrideAttrs {
+              postFixup = final.lib.optionalString final.stdenv.hostPlatform.isLinux ''
+                patchelf --set-interpreter "$(cat ${final.stdenv.cc}/nix-support/dynamic-linker)" \
+                  $out/bin/semgrep-core
+              '';
+            };
+          };
+        })
+      ];
+    };
     # nixpkgs 151fa4e: Tela 2026-07-07 fails noBrokenSymlinks on three
     # upstream aliases whose targets are missing. Keep all usable icons intact.
     telaFix = final: prev: {
@@ -143,7 +163,7 @@
             home-manager.sharedModules = sharedHomeModules;
             home-manager.users.BadRabbit = import ./home/default.nix;
             
-            nixpkgs.overlays = [ patoolFix telaFix ];
+            nixpkgs.overlays = [ patoolFix telaFix semgrepFix ];
           }
         ];
       };
@@ -174,7 +194,7 @@
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {
         system = "x86_64-linux";
-        overlays = [ patoolFix telaFix ];
+        overlays = [ patoolFix telaFix semgrepFix ];
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
       };

@@ -51,7 +51,8 @@ let
     sourceRoot = "${mcpSrc.name}/mcp";
     pyproject = true;
     build-system = [ pkgs.python3Packages.setuptools ];
-    dependencies = with pkgs.python3Packages; [ docutils pyyaml mcp ] ++ mcp.optional-dependencies.cli;
+    # mcp 2.x убрал mcp.server.fastmcp, а сервер требует mcp<2: берём ветку 1.x из nixpkgs.
+    dependencies = with pkgs.python3Packages; [ docutils pyyaml mcp_1 ] ++ mcp_1.optional-dependencies.cli;
     doCheck = false; # интеграционные тесты ждут живой Blender на :9876
     meta = {
       description = "Blender Lab MCP server: natural-language interface to the Python API and docs";
