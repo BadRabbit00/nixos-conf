@@ -44,12 +44,17 @@ ddc_set() {
 	local lock=${XDG_RUNTIME_DIR:-/tmp}/backlight-ddc.lock
 
 	# DDC is slow (~100 ms+): skip the key repeat instead of queueing calls
-	exec 9> "$lock"
+	if ! command -v ddcutil > /dev/null; then
+		notify-send "Brightness" "ddcutil not installed"
+		return 1
+	fi
+
+	exec 9> "$lock" || return 1
 	flock -n 9 || return 0
 
 	if ! ddcutil --sn "$serial" --noverify --sleep-multiplier .1 \
 		setvcp 10 "$sign" "$value" > /dev/null 2>&1; then
-		notify-send -u critical "Brightness" "DDC/CI failed for monitor $serial (i2c group? i2c-dev?)"
+		notify-send -u critical "Brightness" "DDC/CI failed for monitor $serial (i2c group? i2c-dev?)" 9>&-
 		return 1
 	fi
 }
@@ -80,8 +85,7 @@ main() {
 	# Focused output follows the mouse; external monitors have no backlight class
 	local name="" serial="" info
 	if info=$(niri msg -j focused-output 2> /dev/null); then
-		name=$(jq -r '.name // ""' <<< "$info")
-		serial=$(jq -r '.serial // ""' <<< "$info")
+		IFS=$'\t' read -r name serial < <(jq -r '[.name // "", .serial // ""] | @tsv' <<< "$info") || true
 	fi
 
 	if [[ -n $name && $name != eDP-* ]]; then
