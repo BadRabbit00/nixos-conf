@@ -9,6 +9,9 @@
   catppuccin.enable = true;
   catppuccin.autoEnable = false;
 
+  # DDC/CI: /dev/i2c-* (группа i2c) для яркости внешних мониторов через ddcutil.
+  hardware.i2c.enable = true;
+
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
