@@ -4,7 +4,7 @@
   users.users.BadRabbit = {
     isNormalUser = true;
     description = "BadRabbit";
-    extraGroups = [ "networkmanager" "wheel" "video" "input" "docker" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "input" "docker" "i2c" ];
     shell = pkgs.zsh;
     # initialPassword задаёт пароль ТОЛЬКО при первой установке (для уже существующего
     # юзера инертен). Для реальной защиты сгенерируй хэш и переключись на hashedPassword:

@@ -13,7 +13,7 @@ let
   scriptsDir = "${config.home.homeDirectory}/.config/waybar/scripts";
 in
 {
-  home.packages = lib.optionals isNixOS [ pkgs.brightnessctl ] ++ (with pkgs; [
+  home.packages = lib.optionals isNixOS [ pkgs.brightnessctl pkgs.ddcutil ] ++ (with pkgs; [
     fzf
     libnotify
   ]) ++ lib.optionals isNixOS (with pkgs; [
