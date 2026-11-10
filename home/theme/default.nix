@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   # Catppuccin Mocha с красным акцентом под "Infernal Blood".
@@ -16,6 +16,18 @@ in
     name = "Bibata-Modern-Classic"; # Черные курсоры лучше подходят к бездне
     size = 24;
   };
+
+  # HM по умолчанию делает `xrdb -merge` под защитой лишь `[[ -v DISPLAY ]]`.
+  # Если DISPLAY задан, а X-сервера нет (niri без xwayland-satellite, мёртвый
+  # ssh-forward), xrdb завершается с 1, а activate работает под `set -e` и
+  # молча пропускает reloadSystemd и warrenSync. mkForce заменяет onChange из
+  # modules/xresources.nix: сбой xrdb становится предупреждением.
+  home.file.${config.xresources.path}.onChange = lib.mkForce ''
+    if [[ -v DISPLAY ]]; then
+      ${lib.getExe pkgs.xrdb} -merge ${config.xresources.path} \
+        || echo "warning: xrdb cannot reach DISPLAY=$DISPLAY, .Xresources not applied" >&2
+    fi
+  '';
 
   gtk = {
     enable = true;
