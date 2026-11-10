@@ -3,13 +3,12 @@
 #
 #   mcp/         MCP-серверы, вливаются в мутабельные конфиги агентов
 #   skills/      сторонние SKILL.md, запинены по rev/hash, скрипты через Nix-обёртки
-#   ecc/         Everything Claude Code из форка BadRabbit00/ECC (flake-input ecc):
-#                скиллы, агенты, команды, правила, хуки; там же свои Nix-агенты,
-#                команды /nix-*, /ask-*, /write-* и скиллы (модуль badrabbit)
+#   warren/      слой агентов br (BadRabbit00/warren, develop; flake-input warren):
+#                скиллы, агенты, команды, workflows, правила, хуки br-hook, роли codex/agy
 #   nix-toolkit/ пакеты инструментов Nix (statix, nvd, nix-tree…)
 #   ask-models/  обёртки ask-*/write-* для чужих моделей
 #   profiles.nix профили Claude Code (CLAUDE_CONFIG_DIR): каталог, обёртка, CLAUDE.md, скиллы, MCP
-#   profiles/    code (обычный ~/.claude, Лилит + ECC) и montage (~/.claude-montage, claude-montage)
+#   profiles/    code (обычный ~/.claude, Лилит + warren) и montage (~/.claude-montage, claude-montage)
 #                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + ECC
 #   gemini/      файлы gemini-cli (~/.config/gemini)
 #   lib.nix      общий инвентарь: корни агентов, fan-out файлов, слияние JSON/TOML
@@ -26,7 +25,7 @@
     ./profiles/security/default.nix
     ./mcp/default.nix
     ./skills/default.nix
-    ./ecc/default.nix
+    ./warren/default.nix
     ./nix-toolkit/default.nix
     ./ask-models/default.nix
   ];

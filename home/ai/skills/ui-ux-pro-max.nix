@@ -134,4 +134,8 @@ let
     };
   };
 in
-lib.genAttrs names (name: "${docs}/${name}")
+# design-system не раскладываем в ~/.claude/skills: одноимённый скилл есть в warren
+# (его правила дизайна), и два источника на один путь — конфликт в home.file.
+# Скрипты и доки brand/slides ссылаются на ${scripts}/design-system по сторовому
+# пути, не по соседнему каталогу, так что сборка остаётся прежней.
+lib.genAttrs (lib.remove "design-system" names) (name: "${docs}/${name}")
