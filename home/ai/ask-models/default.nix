@@ -11,8 +11,8 @@
 #
 # Отчёт: $ASK_MODELS_DIR (по умолчанию ~/.local/state/ask-models)/<repo>/<tool>-<ts>.md
 # с шапкой, промптом, ответом, а для write-* ещё и git-диффом после работы модели.
-# Команды /ask-* и /write-* для Claude и промпты Codex лежат в форке ECC
-# (BadRabbit00/ECC, commands/; для Codex только agy/argon: Codex спрашивать самого себя незачем).
+# Команды /ask-* и /write-* для Claude и промпты Codex лежат в репозитории warren
+# (BadRabbit00/warren, commands/; для Codex только agy/argon: Codex спрашивать самого себя незачем).
 { pkgs, ... }:
 
 let

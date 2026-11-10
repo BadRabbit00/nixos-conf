@@ -10,7 +10,7 @@
 #   agy        agents (корень roots.agy = ~/.gemini/config, как в README warren)
 # settings.json (claude) и config.toml (codex) агенты пишут сами, поэтому не
 # владеем ими через home.file, а вливаем свой кусок activation-скриптом.
-{ config, lib, pkgs, inputs, ... }:
+{ lib, pkgs, inputs, ... }:
 
 let
   ai = import ../lib.nix { inherit lib pkgs; };
@@ -53,8 +53,14 @@ let
       ${ai.mergeJson { file = ''"$HOME/${roots.claude}/settings.json"''; frag = "${payload}/settings.fragment.json"; expr = ". * $ours[0]"; }}
       # Codex: роли агентов warren (config_file относителен CODEX_HOME ->
       # ~/.codex/agents/*.toml ниже). Существующие ключи пользователя сильнее.
+      # Роли explorer/reviewer/docs_researcher остались от старого ECC-синка, а
+      # warren таких файлов не кладёт: снимаем их, только пока config_file ровно
+      # прежний (кастомизированные пользователем остаются).
       ${ai.mergeToml { file = ''"$HOME/${roots.codex}/config.toml"''; frag = codexFrag; expr = ''
-        .agents = ($ours[0].agents + (.agents // {}))''; }}
+        def stale: (.key == "explorer" and .value.config_file? == "agents/explorer.toml")
+          or (.key == "reviewer" and .value.config_file? == "agents/reviewer.toml")
+          or (.key == "docs_researcher" and .value.config_file? == "agents/docs-researcher.toml");
+        .agents = ($ours[0].agents + ((.agents // {}) | with_entries(select(stale | not))))''; }}
       echo "warren: хуки и настройки влиты в ~/.claude/settings.json, роли агентов — в ~/.codex/config.toml"
     '';
   };
@@ -67,12 +73,12 @@ in
     description = "Ядро CLAUDE.md из warren; профиль code склеивает его со своей персоной.";
   };
 
-  config = {
-    home.packages = [ hook sync ];
+  config.home = {
+    packages = [ hook sync ];
 
     # recursive: каталоги настоящие, файлы — симлинки в стор, соседние скиллы
     # из ../skills не трогаем.
-    home.file = {
+    file = {
       "${roots.claude}/skills"        = recursive "${payload}/claude/skills";
       "${roots.claude}/agents"        = recursive "${payload}/claude/agents";
       "${roots.claude}/commands"      = recursive "${payload}/claude/commands";
@@ -88,7 +94,8 @@ in
       "${roots.agy}/agents"           = recursive "${payload}/agy/agents";
     };
 
-    home.activation.warrenSync =
-      lib.hm.dag.entryAfter [ "writeBoundary" ] "$DRY_RUN_CMD ${sync}/bin/warren-sync";
+    # `run` вместо устаревшего $DRY_RUN_CMD (home-manager: dry run сам решает, исполнять ли).
+    activation.warrenSync =
+      lib.hm.dag.entryAfter [ "writeBoundary" ] "run ${sync}/bin/warren-sync";
   };
 }
