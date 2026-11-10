@@ -1,0 +1,158 @@
+name: flake-update-br
+
+# Weekly `nix flake update`; if the NixOS toplevel, the Arch HM generation and
+# the flake checks all build with the new lock, open/update a PR with flake.lock.
+#
+# PRs created with GITHUB_TOKEN do not trigger other workflows, so ci-br.yml
+# will NOT run on that PR; the builds happen here, in this workflow itself.
+# See ci-br.yml for the rationale of the installer, the (absent) store cache
+# and the disk strategy (.github/scripts/prepare-runner.sh).
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: nix flake update
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+      - run: nix flake update
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flake-lock
+          path: flake.lock
+          if-no-files-found: error
+
+  flake-check:
+    name: nix flake check (incl. KVM VM test)
+    needs: update
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: flake-lock
+      - name: Free disk, move /nix to /mnt, enable KVM
+        run: .github/scripts/prepare-runner.sh --kvm
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      - run: nix flake check --print-build-logs --keep-going
+
+  nixos:
+    name: build nixosConfigurations.badrabbitpc
+    needs: update
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: flake-lock
+      - name: Free disk and move /nix to /mnt
+        run: .github/scripts/prepare-runner.sh
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      - run: >-
+          nix build --no-link --print-build-logs --keep-going
+          '.#nixosConfigurations.badrabbitpc.config.system.build.toplevel'
+
+  arch-hm:
+    name: build homeConfigurations."badrabbit@ARCH-BOX"
+    needs: update
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: flake-lock
+      - name: Free disk and move /nix to /mnt
+        run: .github/scripts/prepare-runner.sh
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      # --impure: arch/nixgl.nix reads builtins.currentTime (see ci-br.yml).
+      - run: >-
+          nix build --impure --no-link --print-build-logs --keep-going
+          '.#homeConfigurations."badrabbit@ARCH-BOX".activationPackage'
+
+  pull-request:
+    name: open/update PR
+    needs: [flake-check, nixos, arch-hm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: flake-lock
+      - uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
+        with:
+          token: ${{ github.token }}
+          branch: chore/flake-update
+          add-paths: flake.lock
+          commit-message: "chore: update flake.lock"
+          title: "chore: update flake.lock"
+          body: |
+            Automated `nix flake update`.
+            NixOS toplevel, Arch HM generation and flake checks were built green
+            in the workflow run that created this PR.
+          delete-branch: true
