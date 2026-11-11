@@ -18,17 +18,23 @@
     # second satellite manually. All other bindings come from the same file.
     # The monitor is wired to the RTX, but niri renders on the Intel iGPU; the
     # RTX only scans out the finished frame and stays free for CUDA.
+    # HDMI-A-1 here is the landscape LG UltraGear, the only output; the portrait
+    # transform and offset belong to the NixOS box's second monitor.
     text = lib.replaceStrings
       [ ''spawn-at-startup "hyprlock"''
         ''spawn-at-startup "swaync"''
         ''spawn-at-startup "xwayland-satellite"''
         ''    DISPLAY ":0"''
-        ''spawn "hyprlock"'' ]
+        ''spawn "hyprlock"''
+        ''    transform "90"''
+        ''    position x=1707 y=-982'' ]
       [ "// GDM handles authentication at login."
         "// swaync is bound to niri.service, including D-Bus activation."
         "// niri starts the system xwayland-satellite on demand."
         ""
-        ''spawn "/usr/bin/hyprlock"'' ]
+        ''spawn "/usr/bin/hyprlock"''
+        "    // Landscape on ARCH-BOX: the portrait transform is NixOS-only."
+        "    // Single output: no offset needed." ]
       (builtins.readFile ./config.kdl) + ''
 
       debug {
