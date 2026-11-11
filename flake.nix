@@ -59,11 +59,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # ECC (Everything Claude Code) — свой форк апстрима affaan-m/ecc, ветка
-    # badrabbit: апстрим + модуль `badrabbit` со своими скиллами, Nix-агентами и
-    # командами, а также вся упаковка (nix/: стор, ecc-run/ecc-hook, выборка,
-    # модели агентов, Nix-баннер). Здесь остаётся только раскладка по домам
-    # агентов (home/ai/ecc). Обновление — `nix flake update ecc`.
+    # warren (br) — слой агентов: оркестратор, субагенты, скиллы, команды, хуки;
+    # отдельный репозиторий, ветка develop. Раскладка по домам агентов —
+    # home/ai/warren. Обновление — `nix flake update warren`.
+    warren = {
+      url = "github:BadRabbit00/warren/develop";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # ECC (форк affaan-m/ecc, ветка badrabbit) — теперь только для профилей
+    # security (home/ai/profiles/security): оттуда берутся runtime и payload.
+    # Обновление — `nix flake update ecc`.
     ecc = {
       url = "github:BadRabbit00/ECC/badrabbit";
       inputs.nixpkgs.follows = "nixpkgs";

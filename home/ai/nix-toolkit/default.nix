@@ -1,9 +1,8 @@
 # Инструменты Nix-toolkit. Сами агенты (nix-architect, nix-engineer, nix-reviewer,
 # nix-build-resolver, nix-test-runner), команды /nix-* и скиллы-справочники
 # (nix-toolkit, nix-flake-patterns, project-flake, nixos-module-patterns,
-# nix-packaging, nix-testing, nix-debugging) живут в форке ECC
-# (BadRabbit00/ECC, ветка badrabbit: agents/, commands/, skills/, модуль
-# `badrabbit` в манифесте) и приходят через home/ai/ecc вместе с остальным ECC.
+# nix-packaging, nix-testing, nix-debugging) живут в репозитории
+# BadRabbit00/warren (ветка develop) и приходят через home/ai/warren.
 # Справочники зовут эти бинари по имени, поэтому они стоят декларативно,
 # а не через `nix shell`.
 { pkgs, ... }:

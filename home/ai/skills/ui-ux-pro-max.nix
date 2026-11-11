@@ -119,6 +119,18 @@ let
         --replace-fail '**Python:** This skill uses Python scripts. On Windows, use `python` instead of `python3` (e.g., `${runExe} ${scripts}/design/scripts/logo/search.py` instead of `${runExe} ${scripts}/design/scripts/logo/search.py`).' \
                        '**Python:** every script runs through `${runExe}`, which carries a pinned Python with google-genai and pillow. Never call the scripts with another interpreter.'
 
+      # design-system -> design-tokens: одноимённый скилл есть в warren, два
+      # источника на один путь ломают home.file. Переименовываем имя скилла в
+      # frontmatter и ссылки на него по голому имени в доках. Пути скриптов
+      # (`${scripts}/design-system/…`, `--design-system`, `design-system/<slug>`)
+      # не трогаем: каталог в `scripts` остаётся прежним.
+      sed -i 's/^name: design-system$/name: design-tokens/' "$out/design-system/SKILL.md"
+      find "$out" -name '*.md' -exec sed -E -i \
+        -e 's#(^|[^-/A-Za-z0-9."])design-system(\.?([^-/A-Za-z0-9.]|$))#\1design-tokens\2#g' \
+        -e 's#(^|[^-/A-Za-z0-9."])design-system(\.?([^-/A-Za-z0-9.]|$))#\1design-tokens\2#g' \
+        {} +
+      mv "$out/design-system" "$out/design-tokens"
+
       # Ни одна команда в доках не должна остаться без обёртки.
       if grep -rnE '\b(python3?|node) [^ ]*\.(py|cjs)' "$out" --include='*.md' | grep -v "${runExe}"; then
         echo "unwrapped script invocations left in the docs" >&2
@@ -134,4 +146,7 @@ let
     };
   };
 in
-lib.genAttrs names (name: "${docs}/${name}")
+# Скилл design-system отдаём под именем design-tokens (см. installPhase): в warren
+# есть свой design-system. Каталог со скриптами в `scripts` не переименован.
+lib.genAttrs (map (n: if n == "design-system" then "design-tokens" else n) names)
+  (name: "${docs}/${name}")

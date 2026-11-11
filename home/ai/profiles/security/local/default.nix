@@ -208,6 +208,7 @@ let
         fi
       '' else ''
         # Без NixOS-сервиса: llama-server поднимают руками на ${llm.baseUrl}.
+        : "$snap" # KV snapshots need the NixOS llama-sec service; silences SC2034
         curl -sf --max-time 2 ${lib.escapeShellArg "${lib.removeSuffix "/v1" llm.baseUrl}/health"} >/dev/null \
           || echo "агент ждёт llama-server на ${llm.baseUrl} — он не отвечает" >&2
       ''}

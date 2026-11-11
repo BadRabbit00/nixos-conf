@@ -1,0 +1,143 @@
+name: ci-br
+
+# Proves that the whole flake builds: flake checks (incl. the KVM VM test),
+# the NixOS toplevel of badrabbitpc, the Arch Home Manager generation and
+# lint of the changed .nix files.
+#
+# Nix installer: cachix/install-nix-action (plain, maintained, no service).
+# Store cache: deliberately none. magic-nix-cache / cache-nix-action live in the
+# GitHub Actions cache, which is capped at 10 GB per repository, while the
+# closures are ~49 GB; nearly all of it is substitutable from the public binary
+# caches below anyway. Those caches and keys are copied from
+# modules/core/system.nix (nix.settings), not invented.
+#
+# Disk: each job runs alone on its own runner. Preinstalled toolchains are
+# removed and /nix is bind-mounted onto the ~60+ GB ephemeral /mnt disk
+# (.github/scripts/prepare-runner.sh).
+#
+# arch-hm needs --impure because arch/nixgl.nix reads builtins.currentTime
+# (nixGL NVIDIA auto-detection). The runner has no NVIDIA module, so the
+# detection yields an empty version; this is fine because the HM generation
+# uses the "mesa" default wrapper and never forces the NVIDIA wrappers.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint (changed .nix files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+      - name: statix + deadnix on changed files
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        # Tools come from the nixpkgs pinned in flake.lock.
+        run: nix shell --inputs-from . nixpkgs#statix nixpkgs#deadnix -c .github/scripts/lint-changed.sh
+
+  flake-check:
+    name: nix flake check (incl. KVM VM test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Free disk, move /nix to /mnt, enable KVM
+        run: .github/scripts/prepare-runner.sh --kvm
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      - name: nix flake check
+        run: nix flake check --print-build-logs --keep-going
+      - name: Disk after
+        if: always()
+        run: df -h / /nix
+
+  nixos:
+    name: build nixosConfigurations.badrabbitpc
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Free disk and move /nix to /mnt
+        run: .github/scripts/prepare-runner.sh
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      - name: Build toplevel
+        run: >-
+          nix build --no-link --print-build-logs --keep-going
+          '.#nixosConfigurations.badrabbitpc.config.system.build.toplevel'
+      - name: Disk after
+        if: always()
+        run: df -h / /nix
+
+  arch-hm:
+    name: build homeConfigurations."badrabbit@ARCH-BOX"
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Free disk and move /nix to /mnt
+        run: .github/scripts/prepare-runner.sh
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+        with:
+          github_access_token: ${{ github.token }}
+          extra_nix_config: |
+            extra-substituters = https://nix-community.cachix.org https://catppuccin.cachix.org https://cache.nixos-cuda.org
+            extra-trusted-public-keys = nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs= catppuccin.cachix.org-1:noG/4HkbhJb+lUAdKrph6LaozJvAeEEZj4N732IysmU= cache.nixos-cuda.org:74DUi4Ye579gUqzH4ziL9IyiJBlDpMRn9MBN8oNan9M=
+            max-jobs = 2
+            cores = 2
+            stalled-download-timeout = 90
+            download-attempts = 10
+      - name: Build activationPackage
+        run: >-
+          nix build --impure --no-link --print-build-logs --keep-going
+          '.#homeConfigurations."badrabbit@ARCH-BOX".activationPackage'
+      - name: Disk after
+        if: always()
+        run: df -h / /nix
