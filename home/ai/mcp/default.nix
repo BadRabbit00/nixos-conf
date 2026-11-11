@@ -5,6 +5,9 @@
 #              что построил один, читает другой.
 #   zep      — обычная память. Удалённый сервер Zep, OAuth, ключ в конфиг не
 #              кладётся вообще.
+#   figma    — дизайн из Figma. Удалённый сервер, OAuth: вход при первом обращении
+#              через /mcp в Claude, ключ в конфиг не кладётся. Пока только для
+#              Claude (см. claudeServers ниже).
 #   context7 — живая документация библиотек. Ключ приезжает из sops в рантайме.
 #   colab    — удалённая песочница: агент пишет и исполняет ячейки в открытом
 #              ноутбуке Colab. Пока только для agy (см. agyFrag ниже).
@@ -39,6 +42,7 @@ let
   };
 
   zepUrl = "https://api.getzep.com/mcp";
+  figmaUrl = "https://mcp.figma.com/mcp";
 
   # Замкнутый venv в сторе, собранный из uv.lock проекта. Подробности — в файле.
   colab = import ./colab-mcp.nix { inherit lib pkgs inputs; };
@@ -62,6 +66,10 @@ let
     zep = {
       type = "http";
       url = zepUrl;
+    };
+    figma = {
+      type = "http";
+      url = figmaUrl;
     };
   };
 
@@ -109,6 +117,8 @@ in
   # Claude получает те же серверы через профиль code (../profiles.nix):
   # вливаются в ~/.claude.json скриптом ai-profiles-sync.
   ai.profiles.code.mcp = claudeServers;
+  # Дизайнеру нужен только Figma (OAuth: /mcp в claude-design при первом запуске).
+  ai.profiles.design.mcp = { inherit (claudeServers) figma; };
 
   home.packages = [
     graphify # сам CLI: без `graphify extract` графа не существует

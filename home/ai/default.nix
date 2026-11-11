@@ -8,7 +8,8 @@
 #   nix-toolkit/ пакеты инструментов Nix (statix, nvd, nix-tree…)
 #   ask-models/  обёртки ask-*/write-* для чужих моделей
 #   profiles.nix профили Claude Code (CLAUDE_CONFIG_DIR): каталог, обёртка, CLAUDE.md, скиллы, MCP
-#   profiles/    code (обычный ~/.claude, Лилит + warren) и montage (~/.claude-montage, claude-montage)
+#   profiles/    code (обычный ~/.claude, Лилит + warren), montage (~/.claude-montage, claude-montage)
+#                и design (~/.claude-design, claude-design: дизайнер, Figma MCP)
 #                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + ECC
 #   gemini/      файлы gemini-cli (~/.config/gemini)
 #   lib.nix      общий инвентарь: корни агентов, fan-out файлов, слияние JSON/TOML
@@ -22,6 +23,7 @@
     ./profiles.nix
     ./profiles/code/default.nix
     ./profiles/montage/default.nix
+    ./profiles/design/default.nix
     ./profiles/security/default.nix
     ./mcp/default.nix
     ./skills/default.nix

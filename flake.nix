@@ -15,6 +15,11 @@
       url = "github:catppuccin/nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    impeccable-nix = {
+      url = "github:BadRabbit00/impeccable-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.home-manager.follows = "home-manager";
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -128,6 +133,20 @@
         '';
       });
     };
+    # nixpkgs f4a03c0: cargoSetupHook forces system libs for -sys crates
+    # (AWS_LC_SYS_USE_SYSTEM, ZSTD_SYS_USE_PKG_CONFIG, LIBSQLITE3_SYS_USE_PKG_CONFIG,
+    # RUSTONIG_SYSTEM_LIBONIG), but codex 0.167.0 lacks them in buildInputs and
+    # its build scripts panic. Remove when nixpkgs is fixed.
+    codexFix = final: prev: {
+      codex = prev.codex.overrideAttrs (old: {
+        buildInputs = (old.buildInputs or [ ]) ++ [
+          final.aws-lc
+          final.zstd
+          final.sqlite
+          final.oniguruma
+        ];
+      });
+    };
     # HM uses Catppuccin packages directly, not catppuccin.* options.
     # The NixOS Catppuccin module remains a system-only import.
     sharedHomeModules = [ inputs.sops-nix.homeManagerModules.sops ];
@@ -169,7 +188,7 @@
             home-manager.sharedModules = sharedHomeModules;
             home-manager.users.BadRabbit = import ./home/default.nix;
             
-            nixpkgs.overlays = [ patoolFix telaFix semgrepFix ];
+            nixpkgs.overlays = [ patoolFix telaFix semgrepFix codexFix ];
           }
         ];
       };
@@ -200,7 +219,7 @@
     homeConfigurations."badrabbit@ARCH-BOX" = home-manager.lib.homeManagerConfiguration {
       pkgs = import nixpkgs {
         system = "x86_64-linux";
-        overlays = [ patoolFix telaFix semgrepFix ];
+        overlays = [ patoolFix telaFix semgrepFix codexFix ];
         config.allowUnfree = true;
         config.nvidia.acceptLicense = true;
       };
