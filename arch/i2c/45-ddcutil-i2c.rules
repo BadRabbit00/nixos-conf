@@ -1,0 +1,2 @@
+# Mirror of NixOS hardware.i2c.enable: members of group i2c may talk DDC/CI.
+KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"

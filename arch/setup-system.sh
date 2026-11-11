@@ -41,6 +41,7 @@ packages=(
     bluez                    # Bluetooth daemon and D-Bus policy
     bluez-utils              # bluetoothctl used by Mechabar
     brightnessctl            # Backlight access and udev rules
+    ddcutil                  # DDC/CI brightness for external monitors (Mechabar backlight.sh)
     pipewire                 # Audio/video server, including portal screencasts
     pipewire-pulse           # PulseAudio protocol server for Waybar and apps
     wireplumber              # PipeWire session manager and wpctl
@@ -74,6 +75,16 @@ install -Dm644 "$script_dir/gpu/61-mutter-primary-gpu.rules" /etc/udev/rules.d/6
 install -Dm644 "$script_dir/gpu/90-nvidia-compute-only.conf" /etc/environment.d/90-nvidia-compute-only.conf
 udevadm control --reload
 udevadm trigger --action=change --subsystem-match=drm --property-match=DEVTYPE=drm_minor
+
+# DDC/CI: ddcutil talks to external monitors through /dev/i2c-*; group i2c
+# mirrors NixOS hardware.i2c.enable so badrabbit needs no root at runtime.
+install -Dm644 "$script_dir/i2c/i2c-dev.conf" /etc/modules-load.d/i2c-dev.conf
+install -Dm644 "$script_dir/i2c/45-ddcutil-i2c.rules" /etc/udev/rules.d/45-ddcutil-i2c.rules
+groupadd -f i2c
+usermod -aG i2c badrabbit
+modprobe i2c-dev
+udevadm control --reload
+udevadm trigger --action=change --subsystem-match=i2c-dev
 
 python "$script_dir/accounts-service.py" /var/lib/AccountsService/users/badrabbit "$session"
 systemctl restart accounts-daemon.service
