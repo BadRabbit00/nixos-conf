@@ -7,6 +7,7 @@
     ../../modules/core/network.nix
     ../../modules/core/user.nix
     ../../modules/core/system.nix
+    ../../modules/core/nix-registry.nix
     ../../modules/core/program.nix
     ../../modules/core/audio.nix
     ../../modules/core/nvidia.nix
