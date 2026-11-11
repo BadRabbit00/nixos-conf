@@ -117,6 +117,8 @@ in
   # Claude получает те же серверы через профиль code (../profiles.nix):
   # вливаются в ~/.claude.json скриптом ai-profiles-sync.
   ai.profiles.code.mcp = claudeServers;
+  # Дизайнеру нужен только Figma (OAuth: /mcp в claude-design при первом запуске).
+  ai.profiles.design.mcp = { inherit (claudeServers) figma; };
 
   home.packages = [
     graphify # сам CLI: без `graphify extract` графа не существует
