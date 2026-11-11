@@ -113,32 +113,64 @@ let
   designerSkills = lib.foldl' (acc: plugin: acc // under "${plugin}/skills" designerPlugins.${plugin}) { }
     (lib.attrNames designerPlugins);
 
+  # Лицензия MIT/ISC лежит только в корне апстрима, а скиллы копируются по
+  # одному: кладём её в каждый скилл (mkSkillSet этого не делает).
+  copyLicense = ''
+    for d in "$out"/*/; do
+      [ -e "$d/LICENSE" ] || cp LICENSE "$d/LICENSE"
+    done
+  '';
+
   checkListed = ''
     # Новый скилл в апстриме не должен молча выпасть из списка.
     for dir in */skills/*/; do
       [ -d "$out/$(basename "$dir")" ] || { echo "unlisted skill: $dir" >&2; exit 1; }
     done
+    ${copyLicense}
   '';
 
-  # Команды плагинов -> одна плоская папка. Одноимённые (test-plan есть в
-  # design-research и prototyping-testing) получают префикс плагина, остальные
-  # имена не меняются, так что /start-here и прочие работают как в документации.
+  pluginNames = lib.concatStringsSep "|" (lib.attrNames designerPlugins);
+
+  # Команды плагинов -> одна плоская папка ~/.claude-design/commands: плагинов как
+  # таковых нет, поэтому в тексте команд имена переписываются под плоскую раскладку.
+  #   /<plugin>:test-plan   -> /<plugin>-test-plan  (одноимённая команда есть в
+  #                            design-research и prototyping-testing: файлы получают
+  #                            префикс плагина)
+  #   /<plugin>:<cmd>       -> /<cmd>
+  #   /test-plan без плагина -> /<свой плагин>-test-plan
+  #   /plugin install ...   -> пометка, что всё уже поставлено Nix
+  # Остальные имена файлов не меняются, так что /start-here и прочие работают.
   commands = pkgs.stdenvNoCC.mkDerivation {
     pname = "designer-skills-commands";
     inherit version;
     src = srcs.designer;
     dontConfigure = true;
     dontBuild = true;
+    nativeBuildInputs = [ pkgs.gnused ];
     installPhase = ''
       runHook preInstall
       mkdir -p "$out"
       for f in */commands/*.md; do
+        plugin=$(dirname "$(dirname "$f")")
         n=$(basename "$f")
         dups=$(printf '%s\n' */commands/"$n" | wc -l)
-        if [ "$dups" -gt 1 ]; then n="$(dirname "$(dirname "$f")")-$n"; fi
+        if [ "$dups" -gt 1 ]; then n="$plugin-$n"; fi
         [ ! -e "$out/$n" ] || { echo "command collision: $n" >&2; exit 1; }
-        cp "$f" "$out/$n"
+        sed -E \
+          -e 's#/(${pluginNames}):test-plan#/\1-test-plan#g' \
+          -e 's#/(${pluginNames}):([a-z][a-z-]*)#/\2#g' \
+          -e "s#/test-plan([^A-Za-z-]|\$)#/$plugin-test-plan\\1#g" \
+          -e 's#If its plugin is not installed, give the install command first: `/plugin install <plugin>@designer-skills`\.#There are no plugins to install: every command and skill is preinstalled by Nix.#' \
+          "$f" > "$out/$n"
       done
+      # Ни одной ссылки на плагины, которых здесь нет.
+      if grep -rnE '/(${pluginNames}):|/plugin install' "$out"; then
+        echo "plugin-namespaced reference left in commands" >&2; exit 1
+      fi
+      if grep -rnE '/test-plan([^A-Za-z-]|$)' "$out"; then
+        echo "bare /test-plan left in commands" >&2; exit 1
+      fi
+      cp LICENSE "$out/LICENSE"
       runHook postInstall
     '';
     meta.license = lib.licenses.mit;
@@ -156,16 +188,26 @@ let
     // set "gsap-skills" srcs.gsap (under "skills" [
       "gsap-core" "gsap-frameworks" "gsap-performance" "gsap-plugins" "gsap-react"
       "gsap-scrolltrigger" "gsap-timeline" "gsap-utils"
-    ]) ""
-    // set "lottie-skills" srcs.lottie { text-to-lottie = "skills/text-to-lottie"; } ""
+    ]) copyLicense
+    // set "lottie-skills" srcs.lottie { text-to-lottie = "skills/text-to-lottie"; } copyLicense
     # animation-principles есть и в designer-skills (на него ссылаются соседние
-    # скиллы), и в motion-design-skills: второй переименован, иначе один затрёт другой.
+    # скиллы), и в motion-design-skills: второй переименован, иначе один затрёт другой,
+    # и ссылки на него внутри этого набора переписаны.
     // set "motion-design-skills" srcs.motionDesign
       (under "skills" [
         "after-effects" "beat-sync-editing" "color-motion" "logo-animation"
         "motion-art-direction" "motion-background" "remotion-video" "shot-composition"
       ] // { motion-animation-principles = "skills/animation-principles"; })
-      ''sed -i 's/^name: animation-principles$/name: motion-animation-principles/' "$out/motion-animation-principles/SKILL.md"''
+      ''
+        find "$out" -type f -name '*.md' -exec sed -E -i \
+          's#(^|[^A-Za-z0-9_-])animation-principles([^A-Za-z0-9_-]|$)#\1motion-animation-principles\2#g' {} +
+        grep -qx 'name: motion-animation-principles' "$out/motion-animation-principles/SKILL.md" \
+          || { echo "rename of animation-principles failed" >&2; exit 1; }
+        if grep -rnE '(^|[^A-Za-z0-9_-])animation-principles([^A-Za-z0-9_-]|$)' "$out"; then
+          echo "old animation-principles reference left" >&2; exit 1
+        fi
+        ${copyLicense}
+      ''
     // ours;
 in
 {

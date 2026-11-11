@@ -1,5 +1,5 @@
-> **NixOS environment (local adaptation of this skill).** This machine is NixOS
-> and everything is declarative. Before following any command below:
+> **Nix-managed environment (NixOS, or Home Manager on Arch; local adaptation of
+> this skill).** Everything is declarative. Before following any command below:
 > - `magick` (ImageMagick), `inkscape`, `potrace`, `python3` (with pillow, numpy,
 >   opencv, scikit-image, playwright), `chromium` and `node` are already on PATH
 >   inside `claude-design` — use them directly, do not install anything.

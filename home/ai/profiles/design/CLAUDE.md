@@ -67,6 +67,7 @@ Do not edit a Figma file unless the user asks.
 - `theme-factory`, `brand-guidelines` for themes and brand rules;
   `canvas-design` for posters and static art; `frontend-design` for polished
   web UI.
+- `design-token` (designer-skills) is guidance on naming and structuring tokens; `design-tokens` (ui-ux-pro-max) is the token architecture with CSS variables, component specs and slides.
 - `ui-ux-pro-max`, `design`, `design-tokens`, `brand`, `ui-styling`, `slides`,
   `banner-design` for styles, palettes, font pairs, tokens, decks, banners.
 - `color-expert` for colour science; `pixel2motion` and `potrace` for turning
@@ -77,6 +78,6 @@ Do not edit a Figma file unless the user asks.
 
 ## Environment
 
-This is NixOS: tools listed in the skill banners are already on PATH. Do not
+This machine is Nix-managed (NixOS, or Home Manager on Arch): tools listed in the skill banners are already on PATH. Do not
 install anything; if a tool is missing, say which one. Skill files are
 read-only; write results elsewhere.
