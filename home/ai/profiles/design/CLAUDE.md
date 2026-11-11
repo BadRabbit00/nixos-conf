@@ -75,6 +75,8 @@ Do not edit a Figma file unless the user asks.
   animation; Emil's skills for interaction polish.
 - designer-skills (ux-strategy, design-research, prototyping-testing and others) for research,
   strategy and test planning.
+- `/impeccable critique|typeset|colorize|layout|polish|audit` (impeccable
+  skill, with its `impeccable-*` agents) for UI review and refinement passes.
 
 ## Environment
 

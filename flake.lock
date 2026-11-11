@@ -119,6 +119,46 @@
         "type": "github"
       }
     },
+    "impeccable-nix": {
+      "inputs": {
+        "home-manager": [
+          "home-manager"
+        ],
+        "impeccable-src": "impeccable-src",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794397684,
+        "narHash": "sha256-n+GSJD0DA3k5i4AWYeIxCdouHlmkMGqCnweNjModYTU=",
+        "owner": "BadRabbit00",
+        "repo": "impeccable-nix",
+        "rev": "29bc40ea239f2940f670a3f377e518a6bbffaaa4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BadRabbit00",
+        "repo": "impeccable-nix",
+        "type": "github"
+      }
+    },
+    "impeccable-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794369397,
+        "narHash": "sha256-G2J4pOtcLrjHduTj0wRGtvlLa5IcuR64ad9/sfdLMdg=",
+        "owner": "pbakaus",
+        "repo": "impeccable",
+        "rev": "c1e0e5492fbb524f5df84d635ecfae7dc438ec45",
+        "type": "github"
+      },
+      "original": {
+        "owner": "pbakaus",
+        "repo": "impeccable",
+        "type": "github"
+      }
+    },
     "microvm": {
       "inputs": {
         "nixpkgs": [
@@ -230,6 +270,7 @@
         "craftapps": "craftapps",
         "ecc": "ecc",
         "home-manager": "home-manager",
+        "impeccable-nix": "impeccable-nix",
         "microvm": "microvm",
         "nixgl": "nixgl",
         "nixpkgs": "nixpkgs",
