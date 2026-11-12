@@ -57,13 +57,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Гейт безопасности для CI (sec-scan, promptfoo, sec-pytest): свой публичный
-    # репозиторий, его же копируемый workflow гоняют проекты без Nix.
-    badrabbit-sec-scan = {
-      url = "github:BadRabbit00/badrabbit-sec-scan";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     # warren (br) — слой агентов: оркестратор, субагенты, скиллы, команды, хуки;
     # отдельный репозиторий, ветка develop. Раскладка по домам агентов —
     # home/ai/warren. Обновление — `nix flake update warren`.
@@ -204,12 +197,11 @@
 
     # ИБ-инструменты вне профиля agy-sec, для claude/codex и рук:
     #   nix develop ~/nixos-conf#security
-    # CI-гейт живёт отдельно: github:BadRabbit00/badrabbit-sec-scan.
     devShells.x86_64-linux.security =
       (import nixpkgs { system = "x86_64-linux"; }).mkShell {
         name = "security";
         packages = secTools.tools;
-        shellHook = ''echo "security: sec-scan, semgrep, gitleaks, trivy, promptfoo, garak, zap… (см. home/ai/profiles/security/GEMINI.md)"'';
+        shellHook = ''echo "security: semgrep, gitleaks, trivy, garak, zap… (см. home/ai/profiles/security/GEMINI.md)"'';
       };
 
     # nix run .#sec-vm -- up <проект>; изоляцию раннера проверяет nix flake check.

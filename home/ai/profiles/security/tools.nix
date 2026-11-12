@@ -2,8 +2,6 @@
 #   - профиль agy-sec (./default.nix) — PATH обёртки;
 #   - devShell `security` во flake.nix — для claude, codex и рук:
 #       nix develop ~/nixos-conf#security
-# sec-scan, promptfoo и sec-pytest приходят из github:BadRabbit00/badrabbit-sec-scan —
-# того же флейка, который гоняет CI в проектах: локально и в CI одна версия.
 #
 # pkgsCuda — nixpkgs с cudaSupport; null — без garak.
 { lib, pkgs, inputs, pkgsCuda ? null }:
@@ -27,14 +25,6 @@ let
     ''exec ${py.agentdojo}/bin/python -m agentdojo.scripts.benchmark "$@"'';
   garak = pkgs.writeShellScriptBin "garak" ''exec ${py.garak}/bin/garak "$@"'';
 
-  # outputs флейка вычисляются заново на нашем pkgs: его packages строятся из
-  # legacyPackages входа и не видят оверлеи (semgrepFix во flake.nix).
-  sys = pkgs.stdenv.hostPlatform.system;
-  ci = ((import "${inputs.badrabbit-sec-scan}/flake.nix").outputs {
-    self = inputs.badrabbit-sec-scan;
-    nixpkgs = { inherit (pkgs) lib; legacyPackages.${sys} = pkgs; };
-  }).packages.${sys};
-  inherit (ci) sec-scan promptfoo sec-pytest;
   # Тот же пакет, что flake check проверяет: гость вычисляется один раз на флейк.
   sec-vm = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.sec-vm;
 
@@ -47,8 +37,6 @@ let
   '';
 
   tools = with pkgs; [
-    sec-scan           # гейт secrets/SAST/SCA/IaC/SBOM, как в CI
-    sec-pytest         # pytest для своих тестов в .sec/test
     sec-vm             # изолированный стенд активного аудита (VM без сети)
     # SAST
     semgrep            # semgrep scan; `semgrep mcp` — MCP-сервер профиля agy-sec
@@ -69,12 +57,11 @@ let
     zap                # OWASP ZAP, headless: zap -cmd -autorun zap.yaml
     schemathesis       # st run <openapi.json>
     # AI / агенты
-    promptfoo          # red teaming LLM-приложения целиком (промпт, тулы, RAG)
     snyk-agent-scan    # MCP/скиллы; анализ уходит на api.snyk.io
     mcp-scanner        # Cisco: MCP офлайн (yara, behavioral)
     agentdojo          # бенчмарк агента против prompt injection
   ] ++ lib.optional (pkgsCuda != null) garak;
 in
 {
-  inherit tools sec-scan sec-vm;
+  inherit tools sec-vm;
 }
