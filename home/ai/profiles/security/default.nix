@@ -1,5 +1,5 @@
 # Профиль «ИБ» для Antigravity CLI: обёртка `agy-sec`, Argon по умолчанию,
-# в PATH сканеры (SAST, секреты, SCA/SBOM, DAST), из скиллов только ECC.
+# в PATH сканеры (SAST, секреты, SCA/SBOM, DAST), из скиллов только payload warren.
 #
 # У agy нет переменной вроде CLAUDE_CONFIG_DIR: все пути (~/.gemini/config,
 # ~/.gemini/antigravity-cli, ~/.gemini/GEMINI.md) он строит от $HOME. Поэтому
@@ -19,9 +19,9 @@
 
 let
   ai = import ../../lib.nix { inherit lib pkgs; };
-  # Тот же payload, что раскладывает ../../ecc (форк BadRabbit00/ECC): одинаковый вызов — одна деривация.
-  ecc = inputs.ecc.lib.mk { inherit pkgs lib; };
-  inherit (ecc) runtime payload;
+  # Тот же payload, что раскладывает ../../warren (warren): одинаковый вызов — одна деривация.
+  br = inputs.warren.lib.mk { inherit pkgs; };
+  inherit (br) payload;
   secTools = import ./tools.nix { inherit lib pkgs inputs pkgsCuda; };
   inherit (secTools) tools;
   perms = import ./permissions.nix;
@@ -33,7 +33,7 @@ let
   gemini = "${dir}/.gemini";
   token = ".gemini/antigravity-cli/antigravity-oauth-token";
 
-  # Свои sec-audit-* скиллы рядом с ECC. ECC-каталог смонтирован recursive, так
+  # Свои sec-audit-* скиллы рядом со скиллами warren. Каталог payload смонтирован recursive, так
   # что соседние каталоги-скиллы не конфликтуют. Имена читаются из ./skills.
   secSkills = ai.dirNames ./skills;
   secSkillFiles = lib.listToAttrs (map
@@ -71,7 +71,7 @@ let
 
   wrapper = pkgs.writeShellApplication {
     name = "agy-sec";
-    runtimeInputs = [ pkgs.antigravity-cli runtime.run ] ++ tools;
+    runtimeInputs = [ pkgs.antigravity-cli ] ++ tools;
     text = ''
       # Настоящий дом запоминаем: agy-sec, запущенный изнутри agy-sec, не должен
       # уйти в ~/.agy-security/.agy-security.
@@ -105,7 +105,7 @@ in
 
   home.file = {
     "${gemini}/GEMINI.md".source = ./GEMINI.md;
-    # Контракт флейка проекта (project-flake, модуль badrabbit форка) уже внутри payload.
+    # Контракт флейка проекта (project-flake) уже внутри payload warren.
     "${gemini}/config/skills" = ai.recursive "${payload}/claude/skills";
     "${gemini}/config/agents" = ai.recursive "${payload}/agy/agents";
   } // secSkillFiles;

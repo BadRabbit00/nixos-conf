@@ -40,27 +40,6 @@
         "type": "github"
       }
     },
-    "ecc": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1793697552,
-        "narHash": "sha256-a00Jubru0anfTSxu9s3YNlVmgD4oPPaiq2R9TUkjWbI=",
-        "owner": "BadRabbit00",
-        "repo": "ECC",
-        "rev": "0c3e0aad048d29312f24c5da8149906b921077b5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "BadRabbit00",
-        "ref": "badrabbit",
-        "repo": "ECC",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -247,7 +226,6 @@
       "inputs": {
         "catppuccin": "catppuccin",
         "craftapps": "craftapps",
-        "ecc": "ecc",
         "home-manager": "home-manager",
         "impeccable-nix": "impeccable-nix",
         "microvm": "microvm",
