@@ -12,7 +12,6 @@
 #
 #   GEMINI.md          правила профиля и шпаргалка по инструментам
 #   tools.nix          набор инструментов (общий с devShell `security` во flake.nix)
-#   (sec-scan, promptfoo, sec-pytest — из github:BadRabbit00/badrabbit-sec-scan)
 #   schemathesis.nix   пакет (в nixpkgs нет), колёса с PyPI по sha256
 #   py/                Agent Scan, Cisco mcp-scanner, AgentDojo, garak: venv из uv.lock (uv2nix)
 #   skills/            свои sec-audit-* скиллы для agy (план аудита и гайды по инструментам)
@@ -100,9 +99,9 @@ in
   # Тот же профиль на локальной модели: opencode-sec, agy-sdk-sec, llama-sec.
   imports = [ ./local ];
 
-  # sec-scan — в общий PATH: им пользуются и claude, и codex, и руки.
+  # sync и обёртка — в общий PATH: ими пользуются и claude, и codex, и руки.
   # Остальные инструменты — в agy-sec или `nix develop ~/nixos-conf#security`.
-  home.packages = [ wrapper sync secTools.sec-scan ];
+  home.packages = [ wrapper sync ];
 
   home.file = {
     "${gemini}/GEMINI.md".source = ./GEMINI.md;

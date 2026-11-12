@@ -11,7 +11,7 @@
 # (для garak — python314 / python3.14, см. ниже).
 #
 # pkgsCuda — nixpkgs с cudaSupport (как в home/generic-linux.nix); null — без garak
-# (CI: garak там не нужен, LLM-часть проверяет promptfoo).
+# (CI: garak там не нужен, LLM-часть здесь не проверяется).
 { lib, pkgs, inputs, pkgsCuda ? null }:
 
 let
@@ -82,6 +82,6 @@ in
   antigravity-sdk = mkEnv { name = "antigravity-sdk"; dir = ./antigravity-sdk; dist = "google-antigravity"; };
 } // lib.optionalAttrs (pkgsCuda != null) {
   # garak (NVIDIA): 230+ проб уязвимостей модели. Только локально, на RTX:
-  # цели — llama-server (OpenAI API), HF-модели, API. В CI его место — promptfoo.
+  # цели — llama-server (OpenAI API), HF-модели, API. В CI его не гоняем.
   garak = mkGarak "garak" pkgsCuda;
 }
