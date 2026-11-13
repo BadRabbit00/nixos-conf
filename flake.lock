@@ -319,11 +319,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794292810,
-        "narHash": "sha256-UWW5Cc1RT9PP7Oz8JOEcovpj6VtRmuQxUkqIl02eqLg=",
+        "lastModified": 1794501205,
+        "narHash": "sha256-rWbQH74gpOaNx2TrUGxMlzaC2R1fCcfip5fYixdNev8=",
         "owner": "BadRabbit00",
         "repo": "warren",
-        "rev": "1248ee76274b125c64ef6b485e86e5c0d98c436d",
+        "rev": "c7889a566263f730226154479a2e8ee095f53ef2",
         "type": "github"
       },
       "original": {
