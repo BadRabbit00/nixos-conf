@@ -18,6 +18,13 @@
         IdentitiesOnly = true;
         ServerAliveInterval = 60;
       };
+      "evaserver-local" = {
+        HostName = "192.168.10.52";
+        User = "BadRabbit";
+        IdentityFile = "~/.ssh/eva_server";
+        IdentitiesOnly = true;
+        ServerAliveInterval = 60;
+      };
     };
   };
 }

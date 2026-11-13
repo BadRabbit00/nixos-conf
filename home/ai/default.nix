@@ -10,7 +10,7 @@
 #   profiles.nix профили Claude Code (CLAUDE_CONFIG_DIR): каталог, обёртка, CLAUDE.md, скиллы, MCP
 #   profiles/    code (обычный ~/.claude, Лилит + warren), montage (~/.claude-montage, claude-montage)
 #                и design (~/.claude-design, claude-design: дизайнер, Figma MCP)
-#                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + ECC
+#                security — agy-sec: Antigravity с отдельным $HOME (~/.agy-security), ИБ-сканеры + скиллы warren
 #   gemini/      файлы gemini-cli (~/.config/gemini)
 #   lib.nix      общий инвентарь: корни агентов, fan-out файлов, слияние JSON/TOML
 #
