@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../modules/core/bootloader.nix
     ../../modules/core/network.nix
+    ../../modules/core/tailscale.nix
     ../../modules/core/user.nix
     ../../modules/core/system.nix
     ../../modules/core/nix-registry.nix
